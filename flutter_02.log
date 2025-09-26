@@ -1,0 +1,91 @@
+Flutter crash report.
+Please report a bug at https://github.com/flutter/flutter/issues.
+
+## command
+
+flutter run
+
+## exception
+
+PathAccessException: PathAccessException: Deletion failed, path = 'build\b6862f53c5db0dffd80a6274ce6c73bd.cache.dill.track.dill' (OS Error: The process cannot access the file because it is being used by another process.
+, errno = 32)
+
+```
+#0      _Directory._deleteSync (dart:io/directory_impl.dart:226:7)
+#1      FileSystemEntity.deleteSync (dart:io/file_system_entity.dart:425:7)
+#2      _File._deleteSync (dart:io/file_impl.dart:364:50)
+#3      FileSystemEntity.deleteSync (dart:io/file_system_entity.dart:425:7)
+#4      ForwardingFileSystemEntity.deleteSync (package:file/src/forwarding/forwarding_file_system_entity.dart:70:16)
+#5      ForwardingFileSystemEntity.deleteSync (package:file/src/forwarding/forwarding_file_system_entity.dart:70:16)
+#6      ErrorHandlingFileSystem.deleteIfExists (package:flutter_tools/src/base/error_handling_io.dart:90:14)
+#7      ErrorHandlingFile.copySync.<anonymous closure> (package:flutter_tools/src/base/error_handling_io.dart:329:35)
+#8      _runSync (package:flutter_tools/src/base/error_handling_io.dart:549:14)
+#9      ErrorHandlingFile.copySync (package:flutter_tools/src/base/error_handling_io.dart:312:5)
+#10     ResidentRunner.cacheInitialDillCompilation (package:flutter_tools/src/resident_runner.dart:1258:18)
+#11     ResidentWebRunner.run.<anonymous closure> (package:flutter_tools/src/isolated/resident_web_runner.dart:344:11)
+<asynchronous suspension>
+#12     asyncGuard.<anonymous closure> (package:flutter_tools/src/base/async_guard.dart:109:26)
+<asynchronous suspension>
+```
+
+## flutter doctor
+
+```
+[32m[✓][39m Flutter (Channel stable, 3.32.0, on Microsoft Windows [Version 10.0.22000.2538], locale en-US) [1,650ms]
+    [32m•[39m Flutter version 3.32.0 on channel stable at C:\Users\Lameck Bosire\Documents\flutter
+    [32m•[39m Upstream repository https://github.com/flutter/flutter.git
+    [32m•[39m Framework revision be698c48a6 (3 months ago), 2025-05-19 12:59:14 -0700
+    [32m•[39m Engine revision 1881800949
+    [32m•[39m Dart version 3.8.0
+    [32m•[39m DevTools version 2.45.1
+
+[32m[✓][39m Windows Version (11 Pro 64-bit, 21H2, 2009) [5.3s]
+
+[33m[!][39m Android toolchain - develop for Android devices (Android SDK version 36.0.0) [7.7s]
+    [32m•[39m Android SDK at C:\Users\Lameck Bosire\AppData\Local\Android\sdk
+    [32m•[39m Platform android-36, build-tools 36.0.0
+    [32m•[39m Java binary at: C:\Program Files\Android\Android Studio1\jbr\bin\java
+      This is the JDK bundled with the latest Android Studio installation on this machine.
+      To manually set the JDK path, use: `flutter config --jdk-dir="path/to/jdk"`.
+    [32m•[39m Java version OpenJDK Runtime Environment (build 21.0.6+-13391695-b895.109)
+    [33m![39m Some Android licenses not accepted. To resolve this, run: flutter doctor --android-licenses
+
+[32m[✓][39m Chrome - develop for the web [477ms]
+    [32m•[39m Chrome at C:\Program Files\Google\Chrome\Application\chrome.exe
+
+[32m[✓][39m Visual Studio - develop Windows apps (Visual Studio Build Tools 2019 16.11.47) [474ms]
+    [32m•[39m Visual Studio at C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools
+    [32m•[39m Visual Studio Build Tools 2019 version 16.11.36107.64
+    [32m•[39m Windows 10 SDK version 10.0.22000.0
+
+[33m[!][39m Android Studio (version 2024.3) [16ms]
+    [32m•[39m Android Studio at C:\Program Files\Android\Android Studio
+    [32m•[39m Flutter plugin can be installed from:
+      🔨 https://plugins.jetbrains.com/plugin/9212-flutter
+    [32m•[39m Dart plugin can be installed from:
+      🔨 https://plugins.jetbrains.com/plugin/6351-dart
+    [31m✗[39m Unable to find bundled Java version.
+    [32m•[39m Try updating or re-installing Android Studio.
+
+[32m[✓][39m Android Studio (version 2025.1.2) [11ms]
+    [32m•[39m Android Studio at C:\Program Files\Android\Android Studio1
+    [32m•[39m Flutter plugin can be installed from:
+      🔨 https://plugins.jetbrains.com/plugin/9212-flutter
+    [32m•[39m Dart plugin can be installed from:
+      🔨 https://plugins.jetbrains.com/plugin/6351-dart
+    [32m•[39m Java version OpenJDK Runtime Environment (build 21.0.6+-13391695-b895.109)
+
+[32m[✓][39m VS Code (version 1.102.3) [10ms]
+    [32m•[39m VS Code at C:\Users\Lameck Bosire\AppData\Local\Programs\Microsoft VS Code
+    [32m•[39m Flutter extension version 3.116.0
+
+[32m[✓][39m Connected device (3 available) [468ms]
+    [32m•[39m Windows (desktop) • windows • windows-x64    • Microsoft Windows [Version 10.0.22000.2538]
+    [32m•[39m Chrome (web)      • chrome  • web-javascript • Google Chrome 138.0.7204.184
+    [32m•[39m Edge (web)        • edge    • web-javascript • Microsoft Edge 138.0.3351.109
+
+[32m[✓][39m Network resources [803ms]
+    [32m•[39m All expected network resources are available.
+
+[33m![39m Doctor found issues in 2 categories.
+```
