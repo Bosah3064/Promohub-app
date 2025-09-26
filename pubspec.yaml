@@ -1,0 +1,61 @@
+name: promohub
+description: "PromoHub - AI-powered marketplace for buying, selling, and discovering amazing deals"
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.2.0 <4.0.0'
+  flutter: ">=3.16.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  # Core UI and responsive design
+  sizer: ^2.0.15
+  google_fonts: ^6.3.0
+  flutter_svg: ^2.2.0
+  cached_network_image: ^3.4.1
+  intl: ^0.20.2
+  geolocator: ^14.0.2
+  geocoding: ^4.0.0
+  flutter_dotenv: ^5.1.0 
+  cupertino_icons: ^1.0.2
+  encrypt: ^5.0.1  # Correct encryption package
+  crypto: ^3.0.2 
+  validators: ^3.0.0
+  # State management and networking
+  dio: ^5.9.0
+  connectivity_plus: ^6.1.4
+  shared_preferences: ^2.5.3
+  
+  # UI enhancement
+  fluttertoast: ^8.2.12
+  fl_chart: ^1.0.0
+  
+  # Supabase integration
+  supabase_flutter: ^2.9.1
+  
+  # Payment processing
+  flutter_stripe: ^11.5.0
+
+  web: 1.1.1
+  share_plus: ^11.1.0
+  url_launcher: 6.3.2
+  camera: 0.11.2
+  image_picker: any
+  permission_handler: any
+  record: ^6.0.0
+  universal_html: ^2.2.4
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/
+    - assets/data/countries+states+cities.json
+    - assets/data/countryPhoneCodes.json
+    - .env
