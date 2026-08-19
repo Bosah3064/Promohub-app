@@ -63,7 +63,7 @@ class CurrentSubscriptionWidget extends StatelessWidget {
                   child: Text(
                     tier.toUpperCase(),
                     style: GoogleFonts.inter(
-                      fontSize: 10.sp,
+                      fontSize: 12.0,
                       fontWeight: FontWeight.w700,
                       color: Colors.white,
                     ),
@@ -88,7 +88,7 @@ class CurrentSubscriptionWidget extends StatelessWidget {
                     child: Text(
                       '$daysRemaining days left',
                       style: GoogleFonts.inter(
-                        fontSize: 10.sp,
+                        fontSize: 12.0,
                         fontWeight: FontWeight.w600,
                         color: daysRemaining <= 3
                             ? Colors.orange[700]
@@ -105,7 +105,7 @@ class CurrentSubscriptionWidget extends StatelessWidget {
             Text(
               planName,
               style: GoogleFonts.inter(
-                fontSize: 18.sp,
+                fontSize: 20.0,
                 fontWeight: FontWeight.w700,
                 color: Colors.grey[800],
               ),
@@ -118,7 +118,7 @@ class CurrentSubscriptionWidget extends StatelessWidget {
                   Text(
                     'KSh ${subscriptionStats['price_ksh']?.toStringAsFixed(0) ?? '0'}',
                     style: GoogleFonts.inter(
-                      fontSize: 14.sp,
+                      fontSize: 16.0,
                       fontWeight: FontWeight.w600,
                       color: Colors.grey[700],
                     ),
@@ -126,7 +126,7 @@ class CurrentSubscriptionWidget extends StatelessWidget {
                   Text(
                     ' / month',
                     style: GoogleFonts.inter(
-                      fontSize: 12.sp,
+                      fontSize: 14.0,
                       color: Colors.grey[500],
                     ),
                   ),
@@ -153,7 +153,7 @@ class CurrentSubscriptionWidget extends StatelessWidget {
                       Text(
                         'Listings Used',
                         style: GoogleFonts.inter(
-                          fontSize: 12.sp,
+                          fontSize: 14.0,
                           fontWeight: FontWeight.w600,
                           color: Colors.grey[700],
                         ),
@@ -163,7 +163,7 @@ class CurrentSubscriptionWidget extends StatelessWidget {
                             ? '$currentListings / ∞'
                             : '$currentListings / ${listingLimit ?? 0}',
                         style: GoogleFonts.inter(
-                          fontSize: 12.sp,
+                          fontSize: 14.0,
                           fontWeight: FontWeight.w700,
                           color: tierColor,
                         ),
@@ -197,7 +197,7 @@ class CurrentSubscriptionWidget extends StatelessWidget {
                           children: [
                             Icon(
                               Icons.warning_amber,
-                              size: 14.sp,
+                              size: 16.0,
                               color: Colors.orange[700],
                             ),
                             SizedBox(width: 2.w),
@@ -207,7 +207,7 @@ class CurrentSubscriptionWidget extends StatelessWidget {
                                     ? 'Listing limit reached! Upgrade to create more listings.'
                                     : 'Approaching listing limit. Consider upgrading.',
                                 style: GoogleFonts.inter(
-                                  fontSize: 10.sp,
+                                  fontSize: 12.0,
                                   color: Colors.orange[700],
                                   fontWeight: FontWeight.w500,
                                 ),
@@ -228,7 +228,7 @@ class CurrentSubscriptionWidget extends StatelessWidget {
               Text(
                 'Your Plan Includes:',
                 style: GoogleFonts.inter(
-                  fontSize: 12.sp,
+                  fontSize: 14.0,
                   fontWeight: FontWeight.w600,
                   color: Colors.grey[700],
                 ),
@@ -283,7 +283,7 @@ class CurrentSubscriptionWidget extends StatelessWidget {
                       child: Text(
                         'Upgrade Plan',
                         style: GoogleFonts.inter(
-                          fontSize: 12.sp,
+                          fontSize: 14.0,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -303,7 +303,7 @@ class CurrentSubscriptionWidget extends StatelessWidget {
                     child: Text(
                       'Manage',
                       style: GoogleFonts.inter(
-                        fontSize: 12.sp,
+                        fontSize: 14.0,
                         fontWeight: FontWeight.w600,
                         color: tierColor,
                       ),

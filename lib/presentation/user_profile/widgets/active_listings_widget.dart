@@ -174,7 +174,7 @@ class ActiveListingsWidget extends StatelessWidget {
                           listing["title"] as String,
                           style: AppTheme.lightTheme.textTheme.titleSmall?.copyWith(
                             fontWeight: FontWeight.w600,
-                            fontSize: 12.sp,
+                            fontSize: 14.0,
                           ),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
@@ -185,7 +185,7 @@ class ActiveListingsWidget extends StatelessWidget {
                           style: AppTheme.lightTheme.textTheme.titleMedium?.copyWith(
                             color: AppTheme.lightTheme.primaryColor,
                             fontWeight: FontWeight.w700,
-                            fontSize: 13.sp,
+                            fontSize: 15.0,
                           ),
                         ),
                       ],

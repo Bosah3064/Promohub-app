@@ -156,7 +156,7 @@ class _RegistrationFormWidgetState extends State<RegistrationFormWidget> {
                   Text(
                     'Select Country',
                     style: TextStyle(
-                      fontSize: 16.sp,
+                      fontSize: 18.0,
                       fontWeight: FontWeight.w700,
                       color: AppTheme.textPrimaryLight,
                     ),
@@ -197,7 +197,7 @@ class _RegistrationFormWidgetState extends State<RegistrationFormWidget> {
                           title: Text(
                             country['country']!,
                             style: TextStyle(
-                              fontSize: 14.sp,
+                              fontSize: 16.0,
                               fontWeight: isSelected
                                   ? FontWeight.w600
                                   : FontWeight.w400,
@@ -209,7 +209,7 @@ class _RegistrationFormWidgetState extends State<RegistrationFormWidget> {
                           trailing: Text(
                             country['code']!,
                             style: TextStyle(
-                              fontSize: 13.sp,
+                              fontSize: 15.0,
                               color: AppTheme.textSecondaryLight,
                               fontWeight: FontWeight.w500,
                             ),
@@ -280,7 +280,7 @@ class _RegistrationFormWidgetState extends State<RegistrationFormWidget> {
           Text(
             label,
             style: TextStyle(
-              fontSize: 12.sp,
+              fontSize: 14.0,
               fontWeight: FontWeight.w600,
               color: AppTheme.textPrimaryLight,
             ),
@@ -365,7 +365,7 @@ class _RegistrationFormWidgetState extends State<RegistrationFormWidget> {
                           child: Text(
                             _selectedCountryCode ?? '+1',
                             style: TextStyle(
-                              fontSize: 13.sp,
+                              fontSize: 15.0,
                               fontWeight: FontWeight.w600,
                               color: AppTheme.primaryLight,
                             ),
@@ -447,7 +447,7 @@ class _RegistrationFormWidgetState extends State<RegistrationFormWidget> {
               child: Text(
                 _passwordStrength,
                 style: TextStyle(
-                  fontSize: 10.sp,
+                  fontSize: 12.0,
                   color: _passwordStrengthColor,
                   fontWeight: FontWeight.w600,
                 ),
@@ -517,25 +517,25 @@ class _RegistrationFormWidgetState extends State<RegistrationFormWidget> {
                     crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
                       Text('I agree to the ',
-                          style: TextStyle(fontSize: 11.sp)),
+                          style: TextStyle(fontSize: 13.0)),
                       GestureDetector(
                         onTap: () => setState(
                             () => _agreeToTerms = !_agreeToTerms),
                         child: Text('Terms of Service',
                             style: TextStyle(
-                                fontSize: 11.sp,
+                                fontSize: 13.0,
                                 color:
                                     AppTheme.lightTheme.colorScheme.primary,
                                 fontWeight: FontWeight.w600)),
                       ),
                       Text(' and ',
-                          style: TextStyle(fontSize: 11.sp)),
+                          style: TextStyle(fontSize: 13.0)),
                       GestureDetector(
                         onTap: () => setState(
                             () => _agreeToTerms = !_agreeToTerms),
                         child: Text('Privacy Policy',
                             style: TextStyle(
-                                fontSize: 11.sp,
+                                fontSize: 13.0,
                                 color:
                                     AppTheme.lightTheme.colorScheme.primary,
                                 fontWeight: FontWeight.w600)),
@@ -592,7 +592,7 @@ class _RegistrationFormWidgetState extends State<RegistrationFormWidget> {
                           Text(
                             'Create Account',
                             style: TextStyle(
-                              fontSize: 14.sp,
+                              fontSize: 16.0,
                               color: Colors.white,
                               fontWeight: FontWeight.w700,
                               letterSpacing: 0.5,

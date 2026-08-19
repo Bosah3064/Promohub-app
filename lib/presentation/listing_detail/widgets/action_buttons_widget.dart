@@ -50,7 +50,7 @@ class ActionButtonsWidget extends StatelessWidget {
                       style: TextStyle(
                         color: AppTheme.primaryLight,
                         fontWeight: FontWeight.w700,
-                        fontSize: 12.sp,
+                        fontSize: 14.0,
                       ),
                     ),
                     style: OutlinedButton.styleFrom(
@@ -76,7 +76,7 @@ class ActionButtonsWidget extends StatelessWidget {
                       style: TextStyle(
                         color: AppTheme.primaryLight,
                         fontWeight: FontWeight.w800,
-                        fontSize: 12.sp,
+                        fontSize: 14.0,
                       ),
                     ),
                     style: ElevatedButton.styleFrom(
@@ -108,7 +108,7 @@ class ActionButtonsWidget extends StatelessWidget {
                 child: Text(
                   'Buy Now',
                   style: TextStyle(
-                    fontSize: 14.sp,
+                    fontSize: 16.0,
                     fontWeight: FontWeight.w800,
                     letterSpacing: 0.5,
                   ),

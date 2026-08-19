@@ -224,7 +224,7 @@ class _VoiceSearchOverlayWidgetState extends State<VoiceSearchOverlayWidget>
             _getStatusText(),
             style: AppTheme.lightTheme.textTheme.bodyMedium?.copyWith(
               color: AppTheme.lightTheme.colorScheme.onSurfaceVariant,
-              fontSize: 12.sp,
+              fontSize: 14.0,
             ),
             textAlign: TextAlign.center,
           ),

@@ -29,7 +29,7 @@ class AchievementsSectionWidget extends StatelessWidget {
               Text(
                 'Achievements',
                 style: GoogleFonts.inter(
-                  fontSize: 18.sp,
+                  fontSize: 20.0,
                   fontWeight: FontWeight.bold,
                   color: Colors.black87,
                 ),
@@ -43,7 +43,7 @@ class AchievementsSectionWidget extends StatelessWidget {
                 child: Text(
                   '${achievements.length} Earned',
                   style: GoogleFonts.inter(
-                    fontSize: 12.sp,
+                    fontSize: 14.0,
                     fontWeight: FontWeight.w600,
                     color: const Color(0xFF6C63FF),
                   ),
@@ -128,7 +128,7 @@ class AchievementsSectionWidget extends StatelessWidget {
           Text(
             achievement['name'] ?? 'Achievement',
             style: GoogleFonts.inter(
-              fontSize: 14.sp,
+              fontSize: 16.0,
               fontWeight: FontWeight.bold,
               color: Colors.black87,
             ),
@@ -140,7 +140,7 @@ class AchievementsSectionWidget extends StatelessWidget {
           Text(
             achievement['description'] ?? '',
             style: GoogleFonts.inter(
-              fontSize: 12.sp,
+              fontSize: 14.0,
               color: Colors.grey[600],
             ),
             textAlign: TextAlign.center,
@@ -158,7 +158,7 @@ class AchievementsSectionWidget extends StatelessWidget {
               child: Text(
                 '+${achievement['points']} pts',
                 style: GoogleFonts.inter(
-                  fontSize: 10.sp,
+                  fontSize: 12.0,
                   fontWeight: FontWeight.w600,
                   color: badgeColor,
                 ),
@@ -190,7 +190,7 @@ class AchievementsSectionWidget extends StatelessWidget {
           Text(
             isOwnProfile ? 'No Achievements Yet' : 'No Achievements to Show',
             style: GoogleFonts.inter(
-              fontSize: 16.sp,
+              fontSize: 18.0,
               fontWeight: FontWeight.w600,
               color: Colors.grey[600],
             ),
@@ -201,7 +201,7 @@ class AchievementsSectionWidget extends StatelessWidget {
                 ? 'Complete your first sale or purchase to earn your first achievement!'
                 : 'This user has not earned any achievements yet.',
             style: GoogleFonts.inter(
-              fontSize: 14.sp,
+              fontSize: 16.0,
               color: Colors.grey[500],
             ),
             textAlign: TextAlign.center,

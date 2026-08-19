@@ -2,6 +2,9 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:sizer/sizer.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:geocoding/geocoding.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/app_export.dart';
 import './widgets/current_location_card_widget.dart';
@@ -30,15 +33,7 @@ class _LocationSetupScreenState extends State<LocationSetupScreen> {
   List<Map<String, dynamic>> _allCountries = [];
   bool _isLocationDataLoading = true;
 
-  // Mock location data
-  final Map<String, dynamic> _currentLocationData = {
-    "latitude": 6.5244,
-    "longitude": 3.3792,
-    "city": "Lagos",
-    "region": "Lagos State",
-    "country": "Nigeria",
-    "landmark": "Victoria Island"
-  };
+  Map<String, dynamic> _currentLocationData = {};
 
   @override
   void initState() {
@@ -316,22 +311,71 @@ class _LocationSetupScreenState extends State<LocationSetupScreen> {
       _isLoadingLocation = true;
     });
 
-    await Future.delayed(const Duration(seconds: 2));
-
-    setState(() {
-      _isLoadingLocation = false;
-      _isLocationPermissionGranted = true;
-      _isUsingCurrentLocation = true;
-      _showManualSelection = false;
-    });
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-            'Location set to ${_currentLocationData["city"]}, ${_currentLocationData["region"]}'),
-        backgroundColor: AppTheme.lightTheme.colorScheme.secondary,
-      ),
-    );
+    try {
+      if (!await Geolocator.isLocationServiceEnabled()) {
+        throw Exception('Location services are disabled');
+      }
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
+        throw Exception('Location permission was not granted');
+      }
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.medium,
+        ),
+      );
+      var city = 'Current location';
+      var region = '';
+      var country = '';
+      try {
+        final placemarks = await placemarkFromCoordinates(
+          position.latitude,
+          position.longitude,
+        );
+        if (placemarks.isNotEmpty) {
+          final place = placemarks.first;
+          city = place.locality ?? place.subAdministrativeArea ?? city;
+          region = place.administrativeArea ?? '';
+          country = place.country ?? '';
+        }
+      } catch (_) {}
+      _currentLocationData = {
+        'latitude': position.latitude,
+        'longitude': position.longitude,
+        'city': city,
+        'region': region,
+        'country': country,
+      };
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('selectedCity', city);
+      await prefs.setString('selectedRegion', region);
+      await prefs.setString('selectedCountry', country);
+      if (!mounted) return;
+      setState(() {
+        _isLocationPermissionGranted = true;
+        _isUsingCurrentLocation = true;
+        _showManualSelection = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content:
+              Text('Location set to $city${region.isEmpty ? '' : ', $region'}'),
+          backgroundColor: AppTheme.lightTheme.colorScheme.secondary,
+        ),
+      );
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not get your location: $error')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoadingLocation = false);
+    }
   }
 
   void _handleSkip() {

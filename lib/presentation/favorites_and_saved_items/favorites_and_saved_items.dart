@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import '../../core/app_export.dart';
 import './widgets/bulk_actions_bar.dart';
@@ -7,6 +8,7 @@ import './widgets/empty_state_widget.dart';
 import './widgets/saved_listing_card.dart';
 import './widgets/saved_search_card.dart';
 import './widgets/sort_bottom_sheet.dart';
+import '../../services/marketplace_service.dart';
 
 class FavoritesAndSavedItems extends StatefulWidget {
   const FavoritesAndSavedItems({super.key});
@@ -22,7 +24,7 @@ class _FavoritesAndSavedItemsState extends State<FavoritesAndSavedItems>
   String _currentSortOption = 'recently_saved';
   bool _isBulkSelectionMode = false;
   Set<int> _selectedListingIds = {};
-  final Set<int> _selectedSearchIds = {};
+  final MarketplaceService _marketplaceService = MarketplaceService();
 
   // Saved listings (Empty state)
   final List<Map<String, dynamic>> _savedListings = [];
@@ -51,12 +53,38 @@ class _FavoritesAndSavedItemsState extends State<FavoritesAndSavedItems>
         children: [
           _buildTabBar(),
           Expanded(
-            child: TabBarView(
-              controller: _tabController,
-              children: [
-                _buildSavedListingsTab(),
-                _buildSavedSearchesTab(),
-              ],
+            child: StreamBuilder<List<Map<String, dynamic>>>(
+              stream: FirebaseAuth.instance.currentUser == null
+                  ? Stream.value(const [])
+                  : _marketplaceService.watchUserFavorites(
+                      FirebaseAuth.instance.currentUser!.uid),
+              builder: (context, snapshot) {
+                if (snapshot.hasError) {
+                  return Center(
+                    child: EmptyStateWidget(
+                      title: 'Favorites unavailable',
+                      description:
+                          'We could not load your saved listings. Please try again.',
+                      buttonText: 'Try Again',
+                      iconName: 'cloud_off',
+                      onButtonPressed: () => setState(() {}),
+                    ),
+                  );
+                }
+                if (!snapshot.hasData) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                _savedListings
+                  ..clear()
+                  ..addAll(snapshot.data!);
+                return TabBarView(
+                  controller: _tabController,
+                  children: [
+                    _buildSavedListingsTab(),
+                    _buildSavedSearchesTab(),
+                  ],
+                );
+              },
             ),
           ),
         ],

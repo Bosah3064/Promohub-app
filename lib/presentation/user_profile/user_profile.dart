@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:sizer/sizer.dart';
 
 import '../../core/app_export.dart';
@@ -20,18 +23,19 @@ class UserProfile extends StatefulWidget {
 
 class _UserProfileState extends State<UserProfile> {
   final bool _isCurrentUser = true; // Toggle for viewing own profile vs others
-  
+
   final MarketplaceService _marketplaceService = MarketplaceService();
 
   Map<String, dynamic>? _userShop;
   bool _isLoadingShop = true;
+  StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>?
+      _profileSubscription;
 
   // User profile data (starts with mock, updated in initState)
   Map<String, dynamic> userProfile = {
     "id": "user_12345",
     "name": "User",
-    "profileImage":
-        "https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=400",
+    "profileImage": "",
     "memberSince": "Today",
     "rating": 5.0,
     "reviewCount": 0,
@@ -49,52 +53,92 @@ class _UserProfileState extends State<UserProfile> {
   void initState() {
     super.initState();
     _loadUserShop();
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId != null) {
+      _profileSubscription = FirebaseFirestore.instance
+          .collection('user_profiles')
+          .doc(userId)
+          .snapshots()
+          .listen(_applyProfileSnapshot);
+    }
+  }
+
+  void _applyProfileSnapshot(DocumentSnapshot<Map<String, dynamic>> snapshot) {
+    if (!mounted || !snapshot.exists) return;
+    final data = snapshot.data()!;
+    final createdAt = data['created_at'];
+    setState(() {
+      userProfile['name'] = data['full_name'] ?? userProfile['name'];
+      userProfile['profileImage'] = data['avatar_url'] ??
+          FirebaseAuth.instance.currentUser?.photoURL ??
+          '';
+      userProfile['phoneVerified'] = data['phone_verified'] == true;
+      userProfile['idVerified'] = data['id_verified'] == true;
+      userProfile['isVerified'] = data['is_verified'] == true;
+      userProfile['bio'] = data['bio'] ?? userProfile['bio'];
+      userProfile['location'] = data['location'] ?? userProfile['location'];
+      if (createdAt is Timestamp) {
+        final date = createdAt.toDate();
+        userProfile['memberSince'] = '${date.day}/${date.month}/${date.year}';
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _profileSubscription?.cancel();
+    super.dispose();
   }
 
   Future<void> _loadUserShop() async {
     try {
       final user = FirebaseAuth.instance.currentUser;
       final userId = user?.uid;
-      
+
       if (user != null) {
         final email = user.email ?? 'No email';
         final phone = user.phoneNumber ?? 'No phone';
         final name = user.displayName ?? email.split('@')[0];
-        
+
         setState(() {
           userProfile['name'] = name;
           userProfile['emailVerified'] = user.emailVerified;
           userProfile['phoneVerified'] = phone != 'No phone';
           userProfile['id'] = user.uid;
+          userProfile['profileImage'] =
+              user.photoURL ?? userProfile['profileImage'];
         });
       }
 
       if (userId != null) {
         final shop = await _marketplaceService.getUserShop(userId);
-        final listings = await _marketplaceService.getListingsBySellerId(userId);
+        final listings =
+            await _marketplaceService.getListingsBySellerId(userId);
         if (mounted) {
           setState(() {
             _userShop = shop;
             activeListings = listings;
             userStats["totalListings"] = listings.length;
-            
+
             // Format data for the UI
             for (var i = 0; i < activeListings.length; i++) {
-                if (activeListings[i]['images'] != null && (activeListings[i]['images'] as List).isNotEmpty) {
-                    activeListings[i]['image'] = activeListings[i]['images'][0];
-                } else {
-                    activeListings[i]['image'] = 'https://images.unsplash.com/photo-1560393464-5c69a73c5770'; // fallback
-                }
-                
-                // Format price 
-                final price = activeListings[i]['price'];
-                activeListings[i]['price'] = '₦$price';
-                
-                // Add missing mock fields expected by the widget
-                activeListings[i]['views'] = activeListings[i]['view_count'] ?? 0;
-                activeListings[i]['likes'] = 0; 
+              if (activeListings[i]['images'] != null &&
+                  (activeListings[i]['images'] as List).isNotEmpty) {
+                activeListings[i]['image'] = activeListings[i]['images'][0];
+              } else {
+                activeListings[i]['image'] =
+                    'https://images.unsplash.com/photo-1560393464-5c69a73c5770'; // fallback
+              }
+
+              // Format price
+              final price = activeListings[i]['price'];
+              activeListings[i]['price'] = '₦$price';
+
+              // Add missing mock fields expected by the widget
+              activeListings[i]['views'] = activeListings[i]['view_count'] ?? 0;
+              activeListings[i]['likes'] = 0;
             }
-            
+
             _isLoadingShop = false;
           });
         }
@@ -143,7 +187,8 @@ class _UserProfileState extends State<UserProfile> {
       "title": "Trusted Member",
       "description": "Verified account",
       "icon": "verified_user",
-      "earnedDate": DateTime.now().toString().split(' ')[0], // Computed basic badge
+      "earnedDate":
+          DateTime.now().toString().split(' ')[0], // Computed basic badge
     },
   ];
 
@@ -168,17 +213,22 @@ class _UserProfileState extends State<UserProfile> {
                   width: double.infinity,
                   height: 6.h,
                   child: ElevatedButton.icon(
-                    icon: Icon(_userShop != null ? Icons.store : Icons.add_business),
-                    label: Text(_userShop != null ? 'Seller Dashboard' : 'Become a Seller'),
+                    icon: Icon(
+                        _userShop != null ? Icons.store : Icons.add_business),
+                    label: Text(_userShop != null
+                        ? 'Seller Dashboard'
+                        : 'Become a Seller'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppTheme.lightTheme.colorScheme.primary,
                       foregroundColor: Colors.white,
                     ),
                     onPressed: () {
                       if (_userShop != null) {
-                        Navigator.pushNamed(context, '/seller-dashboard', arguments: _userShop!['id']);
+                        Navigator.pushNamed(context, '/seller-dashboard',
+                            arguments: _userShop!['id']);
                       } else {
-                        Navigator.pushNamed(context, '/seller-registration').then((_) => _loadUserShop());
+                        Navigator.pushNamed(context, '/seller-registration')
+                            .then((_) => _loadUserShop());
                       }
                     },
                   ),

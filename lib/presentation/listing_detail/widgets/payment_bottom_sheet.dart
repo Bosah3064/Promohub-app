@@ -69,7 +69,7 @@ class _PaymentBottomSheetState extends State<PaymentBottomSheet> {
                         children: [
                       Text(widget.listing['title'] ?? 'Unknown Item',
                           style: GoogleFonts.inter(
-                              fontSize: 16.sp,
+                              fontSize: 18.0,
                               fontWeight: FontWeight.bold,
                               color: Colors.black87),
                           maxLines: 2,
@@ -78,7 +78,7 @@ class _PaymentBottomSheetState extends State<PaymentBottomSheet> {
                       Text(
                           'Sold by ${widget.listing['seller']?['full_name'] ?? 'Unknown'}',
                           style: GoogleFonts.inter(
-                              fontSize: 14.sp, color: Colors.grey[600])),
+                              fontSize: 16.0, color: Colors.grey[600])),
                     ])),
               ]),
               SizedBox(height: 3.h),
@@ -86,7 +86,7 @@ class _PaymentBottomSheetState extends State<PaymentBottomSheet> {
               SizedBox(height: 2.h),
               Text('Payment Summary',
                   style: GoogleFonts.inter(
-                      fontSize: 18.sp,
+                      fontSize: 20.0,
                       fontWeight: FontWeight.bold,
                       color: Colors.black87)),
               SizedBox(height: 2.h),
@@ -117,7 +117,7 @@ class _PaymentBottomSheetState extends State<PaymentBottomSheet> {
                                 borderRadius: BorderRadius.circular(2.w))),
                         child: Text('Cancel',
                             style: GoogleFonts.inter(
-                                fontSize: 14.sp,
+                                fontSize: 16.0,
                                 fontWeight: FontWeight.w600)))),
                 SizedBox(width: 3.w),
                 Expanded(
@@ -137,7 +137,7 @@ class _PaymentBottomSheetState extends State<PaymentBottomSheet> {
                                     color: Colors.white, strokeWidth: 2))
                             : Text('Pay \$${total.toStringAsFixed(2)}',
                                 style: GoogleFonts.inter(
-                                    fontSize: 14.sp,
+                                    fontSize: 16.0,
                                     fontWeight: FontWeight.w600,
                                     color: Colors.white)))),
               ]),
@@ -149,12 +149,12 @@ class _PaymentBottomSheetState extends State<PaymentBottomSheet> {
     return Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
       Text(label,
           style: GoogleFonts.inter(
-              fontSize: isTotal ? 16.sp : 14.sp,
+              fontSize: isTotal ? 18.0 : 16.0,
               fontWeight: isTotal ? FontWeight.bold : FontWeight.normal,
               color: isTotal ? Colors.black87 : Colors.grey[600])),
       Text(amount,
           style: GoogleFonts.inter(
-              fontSize: isTotal ? 16.sp : 14.sp,
+              fontSize: isTotal ? 18.0 : 16.0,
               fontWeight: isTotal ? FontWeight.bold : FontWeight.w600,
               color: isTotal ? Colors.black87 : Colors.black87)),
     ]);

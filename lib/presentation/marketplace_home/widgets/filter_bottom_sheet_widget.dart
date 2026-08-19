@@ -3,6 +3,7 @@ import 'package:sizer/sizer.dart';
 
 import '../../../core/app_export.dart';
 import '../../../theme/app_theme.dart';
+import '../../../services/marketplace_service.dart';
 
 class FilterBottomSheetWidget extends StatefulWidget {
   final Function(Map<String, dynamic>) onFiltersApplied;
@@ -22,96 +23,98 @@ class _FilterBottomSheetWidgetState extends State<FilterBottomSheetWidget> {
   double _distance = 10.0;
   String? _selectedCategory;
 
-  final List<String> _categories = [
-    'All Categories',
-    'Vehicles',
-    'Electronics',
-    'Fashion',
-    'Real Estate',
-    'Jobs',
-    'Services',
-  ];
+  final MarketplaceService _marketplaceService = MarketplaceService();
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 70.h,
-      padding: EdgeInsets.all(4.w),
-      decoration: BoxDecoration(
-        color: AppTheme.lightTheme.colorScheme.surface,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Center(
-            child: Container(
-              width: 12.w,
-              height: 0.5.h,
-              decoration: BoxDecoration(
-                color: AppTheme.lightTheme.colorScheme.outline
-                    .withValues(alpha: 0.4),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
+    return StreamBuilder<List<Map<String, dynamic>>>(
+      stream: _marketplaceService.watchCategories(),
+      builder: (context, snapshot) {
+        final categories = [
+          'All Categories',
+          ...?snapshot.data?.map((category) => category['name'].toString()),
+        ];
+        return Container(
+          height: 70.h,
+          padding: EdgeInsets.all(4.w),
+          decoration: BoxDecoration(
+            color: AppTheme.lightTheme.colorScheme.surface,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
           ),
-          SizedBox(height: 3.h),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Filters',
-                style: AppTheme.lightTheme.textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              TextButton(
-                onPressed: _resetFilters,
-                child: Text(
-                  'Reset',
-                  style: AppTheme.lightTheme.textTheme.titleSmall?.copyWith(
-                    color: AppTheme.lightTheme.colorScheme.primary,
-                    fontWeight: FontWeight.w600,
+              Center(
+                child: Container(
+                  width: 12.w,
+                  height: 0.5.h,
+                  decoration: BoxDecoration(
+                    color: AppTheme.lightTheme.colorScheme.outline
+                        .withValues(alpha: 0.4),
+                    borderRadius: BorderRadius.circular(2),
                   ),
                 ),
               ),
-            ],
-          ),
-          SizedBox(height: 3.h),
-          Expanded(
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              SizedBox(height: 3.h),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _buildPriceRangeSection(),
-                  SizedBox(height: 4.h),
-                  _buildDistanceSection(),
-                  SizedBox(height: 4.h),
-                  _buildCategorySection(),
+                  Text(
+                    'Filters',
+                    style:
+                        AppTheme.lightTheme.textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: _resetFilters,
+                    child: Text(
+                      'Reset',
+                      style: AppTheme.lightTheme.textTheme.titleSmall?.copyWith(
+                        color: AppTheme.lightTheme.colorScheme.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
                 ],
               ),
-            ),
-          ),
-          SizedBox(height: 2.h),
-          Row(
-            children: [
+              SizedBox(height: 3.h),
               Expanded(
-                child: OutlinedButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: Text('Cancel'),
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildPriceRangeSection(),
+                      SizedBox(height: 4.h),
+                      _buildDistanceSection(),
+                      SizedBox(height: 4.h),
+                      _buildCategorySection(categories),
+                    ],
+                  ),
                 ),
               ),
-              SizedBox(width: 4.w),
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: _applyFilters,
-                  child: Text('Apply Filters'),
-                ),
+              SizedBox(height: 2.h),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: Text('Cancel'),
+                    ),
+                  ),
+                  SizedBox(width: 4.w),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: _applyFilters,
+                      child: Text('Apply Filters'),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -195,7 +198,7 @@ class _FilterBottomSheetWidgetState extends State<FilterBottomSheetWidget> {
     );
   }
 
-  Widget _buildCategorySection() {
+  Widget _buildCategorySection(List<String> categories) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -209,7 +212,7 @@ class _FilterBottomSheetWidgetState extends State<FilterBottomSheetWidget> {
         Wrap(
           spacing: 2.w,
           runSpacing: 1.h,
-          children: _categories.map((category) {
+          children: categories.map((category) {
             final isSelected = _selectedCategory == category;
             return GestureDetector(
               onTap: () {

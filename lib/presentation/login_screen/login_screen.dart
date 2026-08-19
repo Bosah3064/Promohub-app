@@ -118,9 +118,6 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      // Simulate network delay
-      await Future.delayed(const Duration(seconds: 2));
-
       final email = _emailController.text.trim();
       final password = _passwordController.text.trim();
 
@@ -179,23 +176,8 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _handleSocialLogin(String provider) async {
-    setState(() {
-      _isLoading = true;
-    });
-
-    try {
-      // Simulate social login
-      await Future.delayed(const Duration(seconds: 1));
-
-      HapticFeedback.lightImpact();
-      _navigateToHome();
-    } catch (e) {
-      _showErrorMessage('$provider login failed. Please try again.');
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
-    }
+    _showErrorMessage(
+        '$provider sign-in is not configured yet. Use email login.');
   }
 
   void _enableBiometric() {
@@ -324,7 +306,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                         'Sign In',
                                         style: TextStyle(
                                           color: Colors.white,
-                                          fontSize: 15.sp,
+                                          fontSize: 16.0,
                                           fontWeight: FontWeight.w700,
                                           letterSpacing: 0.5,
                                         ),
@@ -367,26 +349,30 @@ class _LoginScreenState extends State<LoginScreen> {
                           SizedBox(height: 2.h),
 
                           // Social Login Buttons
-                          SocialLoginButton(
-                            iconName: 'g_translate',
-                            label: 'Continue with Google',
-                            onPressed: _isLoading
-                                ? () {}
-                                : () => _handleSocialLogin('Google'),
-                          ),
-                          SocialLoginButton(
-                            iconName: 'apple',
-                            label: 'Continue with Apple',
-                            onPressed: _isLoading
-                                ? () {}
-                                : () => _handleSocialLogin('Apple'),
-                          ),
-                          SocialLoginButton(
-                            iconName: 'facebook',
-                            label: 'Continue with Facebook',
-                            onPressed: _isLoading
-                                ? () {}
-                                : () => _handleSocialLogin('Facebook'),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              SocialLoginButton(
+                                iconName: 'g_translate',
+                                onPressed: _isLoading
+                                    ? () {}
+                                    : () => _handleSocialLogin('Google'),
+                              ),
+                              SizedBox(width: 4.w),
+                              SocialLoginButton(
+                                iconName: 'apple',
+                                onPressed: _isLoading
+                                    ? () {}
+                                    : () => _handleSocialLogin('Apple'),
+                              ),
+                              SizedBox(width: 4.w),
+                              SocialLoginButton(
+                                iconName: 'facebook',
+                                onPressed: _isLoading
+                                    ? () {}
+                                    : () => _handleSocialLogin('Facebook'),
+                              ),
+                            ],
                           ),
                           SizedBox(height: 4.h),
 

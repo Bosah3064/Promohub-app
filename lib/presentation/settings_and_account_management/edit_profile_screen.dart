@@ -1,10 +1,14 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:sizer/sizer.dart';
 
 import '../../core/app_export.dart';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../services/firebase_service.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -21,6 +25,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   bool _isLoading = false;
   String? _avatarUrl;
+  XFile? _selectedAvatar;
+  final ImagePicker _imagePicker = ImagePicker();
 
   @override
   void initState() {
@@ -33,13 +39,30 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   Future<void> _loadUserData() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
-      final doc = await FirebaseFirestore.instance.collection('user_profiles').doc(user.uid).get();
+      final doc = await FirebaseFirestore.instance
+          .collection('user_profiles')
+          .doc(user.uid)
+          .get();
       final data = doc.data();
       setState(() {
-        _nameController.text = data?['full_name'] ?? user.displayName ?? user.email?.split('@')[0] ?? '';
+        _nameController.text = data?['full_name'] ??
+            user.displayName ??
+            user.email?.split('@')[0] ??
+            '';
         _phoneController.text = data?['phone'] ?? user.phoneNumber ?? '';
         _avatarUrl = data?['avatar_url'] ?? user.photoURL;
       });
+    }
+  }
+
+  Future<void> _pickAvatar() async {
+    final image = await _imagePicker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 85,
+      maxWidth: 900,
+    );
+    if (image != null && mounted) {
+      setState(() => _selectedAvatar = image);
     }
   }
 
@@ -59,18 +82,47 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
         await user.updateDisplayName(_nameController.text);
-        
-        await FirebaseFirestore.instance.collection('user_profiles').doc(user.uid).set({
+
+        if (_selectedAvatar != null) {
+          _avatarUrl = await FirebaseService().uploadImage(
+            'avatars',
+            '${user.uid}_${DateTime.now().millisecondsSinceEpoch}.jpg',
+            File(_selectedAvatar!.path),
+          );
+        }
+
+        await FirebaseFirestore.instance
+            .collection('user_profiles')
+            .doc(user.uid)
+            .set({
           'full_name': _nameController.text,
           'phone': _phoneController.text,
+          'avatar_url': _avatarUrl ?? user.photoURL,
+          'updated_at': FieldValue.serverTimestamp(),
         }, SetOptions(merge: true));
       }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text("Profile updated successfully"),
-            backgroundColor: AppTheme.lightTheme.colorScheme.primary,
+            content: Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.white, size: 20),
+                SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    "Awesome! Your profile has been updated successfully ✨",
+                    style: TextStyle(fontWeight: FontWeight.w500),
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: Color(0xFF00C853),
+            behavior: SnackBarBehavior.floating,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: EdgeInsets.all(16),
+            duration: Duration(seconds: 3),
           ),
         );
         Navigator.pop(context, true);
@@ -127,10 +179,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   CircleAvatar(
                     radius: 12.w,
                     backgroundColor: AppTheme.lightTheme.colorScheme.primary
-                        .withOpacity(0.1),
-                    backgroundImage:
-                        _avatarUrl != null ? NetworkImage(_avatarUrl!) : null,
-                    child: _avatarUrl == null
+                        .withValues(alpha: 0.1),
+                    backgroundImage: _selectedAvatar != null
+                        ? FileImage(File(_selectedAvatar!.path))
+                            as ImageProvider<Object>
+                        : (_avatarUrl != null && _avatarUrl!.isNotEmpty
+                            ? NetworkImage(_avatarUrl!) as ImageProvider<Object>
+                            : null),
+                    child: _selectedAvatar == null &&
+                            (_avatarUrl == null || _avatarUrl!.isEmpty)
                         ? CustomIconWidget(
                             iconName: 'person',
                             color: AppTheme.lightTheme.colorScheme.primary,
@@ -138,19 +195,22 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           )
                         : null,
                   ),
-                  Container(
-                    padding: EdgeInsets.all(2.w),
-                    decoration: BoxDecoration(
-                      color: AppTheme.lightTheme.colorScheme.primary,
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                          color: AppTheme.lightTheme.colorScheme.surface,
-                          width: 2),
-                    ),
-                    child: CustomIconWidget(
-                      iconName: 'camera_alt',
-                      color: AppTheme.lightTheme.colorScheme.onPrimary,
-                      size: 16,
+                  GestureDetector(
+                    onTap: _pickAvatar,
+                    child: Container(
+                      padding: EdgeInsets.all(2.w),
+                      decoration: BoxDecoration(
+                        color: AppTheme.lightTheme.colorScheme.primary,
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                            color: AppTheme.lightTheme.colorScheme.surface,
+                            width: 2),
+                      ),
+                      child: CustomIconWidget(
+                        iconName: 'camera_alt',
+                        color: AppTheme.lightTheme.colorScheme.onPrimary,
+                        size: 16,
+                      ),
                     ),
                   ),
                 ],

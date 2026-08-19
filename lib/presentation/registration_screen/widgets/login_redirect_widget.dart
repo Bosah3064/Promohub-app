@@ -22,7 +22,7 @@ class LoginRedirectWidget extends StatelessWidget {
           Text(
             'Already have an account? ',
             style: TextStyle(
-              fontSize: 14.sp,
+              fontSize: 16.0,
               color: AppTheme.lightTheme.colorScheme.onSurfaceVariant,
             ),
           ),
@@ -31,7 +31,7 @@ class LoginRedirectWidget extends StatelessWidget {
             child: Text(
               'Sign In',
               style: TextStyle(
-                fontSize: 14.sp,
+                fontSize: 16.0,
                 color: AppTheme.lightTheme.colorScheme.primary,
                 fontWeight: FontWeight.w600,
                 decoration: TextDecoration.underline,

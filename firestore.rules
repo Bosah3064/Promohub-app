@@ -68,10 +68,16 @@ service cloud.firestore {
       // Anyone can read active categories
       allow read: if true;
 
-      // Only admins can create/update/delete categories
-      allow create: if isAdmin();
+      // Authenticated users can create categories, admins can update/delete
+      allow create: if isAuthenticated();
       allow update: if isAdmin();
       allow delete: if isAdmin();
+    }
+
+    // Publicly display only active adverts; admins manage the full collection.
+    match /advertisements/{advertisementId} {
+      allow read: if isAdmin() || resource.data.active == true;
+      allow create, update, delete: if isAdmin();
     }
 
     // ============================================================

@@ -47,10 +47,10 @@ class DefaultFirebaseOptions {
     apiKey: 'AIzaSyC7DGibP5G0c3-kQvLW9J0eUNFxWHzgVCU',
     appId: '1:148879298385:web:444465eaba75edb3ba0d70',
     messagingSenderId: '148879298385',
-    projectId: 'promohub-ce87d',
-    authDomain: 'promohub-ce87d.firebaseapp.com',
-    databaseURL: 'https://promohub-ce87d-default-rtdb.firebaseio.com',
-    storageBucket: 'promohub-ce87d.firebasestorage.app',
+    projectId: 'PromoHub-ce87d',
+    authDomain: 'PromoHub-ce87d.firebaseapp.com',
+    databaseURL: 'https://PromoHub-ce87d-default-rtdb.firebaseio.com',
+    storageBucket: 'PromoHub-ce87d.firebasestorage.app',
     measurementId: 'G-R42X5WTEWY',
   );
 
@@ -58,26 +58,26 @@ class DefaultFirebaseOptions {
     apiKey: 'AIzaSyBy_vqkJD5930qHDsuizAsfeaOHRzA5SJM',
     appId: '1:148879298385:android:ecb0d617a504b5a6ba0d70',
     messagingSenderId: '148879298385',
-    projectId: 'promohub-ce87d',
-    databaseURL: 'https://promohub-ce87d-default-rtdb.firebaseio.com',
-    storageBucket: 'promohub-ce87d.firebasestorage.app',
+    projectId: 'PromoHub-ce87d',
+    databaseURL: 'https://PromoHub-ce87d-default-rtdb.firebaseio.com',
+    storageBucket: 'PromoHub-ce87d.firebasestorage.app',
   );
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyDoUtpfw2L-0zQgQmFZywi0vyzkZrwm_QE',
     appId: '1:148879298385:ios:79f3766d713edec6ba0d70',
     messagingSenderId: '148879298385',
-    projectId: 'promohub-ce87d',
-    databaseURL: 'https://promohub-ce87d-default-rtdb.firebaseio.com',
-    storageBucket: 'promohub-ce87d.firebasestorage.app',
+    projectId: 'PromoHub-ce87d',
+    databaseURL: 'https://PromoHub-ce87d-default-rtdb.firebaseio.com',
+    storageBucket: 'PromoHub-ce87d.firebasestorage.app',
     iosClientId: '148879298385-ep5cdvr7tkkpos34qquml6sdbvecgf5d.apps.googleusercontent.com',
-    iosBundleId: 'com.promohub.app.testProject',
+    iosBundleId: 'com.PromoHub.app.testProject',
   );
   static const FirebaseOptions macos = FirebaseOptions(
     apiKey: 'REPLACE_ME_MACOS_API_KEY',
     appId: 'REPLACE_ME_MACOS_APP_ID',
     messagingSenderId: 'REPLACE_ME_SENDER_ID',
-    projectId: 'promohub-app',
-    storageBucket: 'promohub-app.appspot.com',
-    iosBundleId: 'com.example.promohub.RunnerTests',
+    projectId: 'PromoHub-app',
+    storageBucket: 'PromoHub-app.appspot.com',
+    iosBundleId: 'com.example.PromoHub.RunnerTests',
   );
 }

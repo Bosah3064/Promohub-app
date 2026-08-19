@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:sizer/sizer.dart';
 
 import '../../core/app_export.dart';
+import '../../services/marketplace_service.dart';
 import './widgets/action_buttons_widget.dart';
 import './widgets/image_gallery_widget.dart';
 import './widgets/location_info_widget.dart';
@@ -19,89 +20,77 @@ class ListingDetailScreen extends StatefulWidget {
 
 class _ListingDetailScreenState extends State<ListingDetailScreen> {
   final ScrollController _scrollController = ScrollController();
+  final MarketplaceService _marketplaceService = MarketplaceService();
   bool _isFavorite = false;
+  bool _isLoading = true;
 
-  // Mock listing data
-  final Map<String, dynamic> listingData = {
-    "id": 1,
-    "title": "iPhone 14 Pro Max - 256GB Space Black",
-    "price": "₦850,000",
-    "originalPrice": "₦950,000",
-    "condition": "Like New",
-    "category": "Electronics > Mobile Phones > Apple",
-    "description":
-        """Selling my iPhone 14 Pro Max in excellent condition. Used for only 6 months with screen protector and case from day one. 
+  Map<String, dynamic> listingData = {};
+  List<Map<String, dynamic>> similarListings = [];
 
-Features:
-• 256GB Storage
-• Space Black Color
-• 48MP Camera System
-• A16 Bionic Chip
-• 6.7-inch Super Retina XDR Display
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadListingData();
+    });
+  }
 
-Includes original box, charger, and unused EarPods. No scratches or dents. Battery health at 98%. Reason for sale: upgrading to iPhone 15 Pro Max.
+  Future<void> _loadListingData() async {
+    final args = ModalRoute.of(context)?.settings.arguments;
+    String? listingId;
 
-Serious buyers only. Price slightly negotiable.""",
-    "images": [
-      "https://images.pexels.com/photos/788946/pexels-photo-788946.jpeg",
-      "https://images.pexels.com/photos/1092644/pexels-photo-1092644.jpeg",
-      "https://images.pexels.com/photos/1440727/pexels-photo-1440727.jpeg",
-      "https://images.pexels.com/photos/1649771/pexels-photo-1649771.jpeg"
-    ],
-    "seller": {
-      "id": 101,
-      "name": "Ahmed Okafor",
-      "avatar":
-          "https://images.pexels.com/photos/1043471/pexels-photo-1043471.jpeg",
-      "rating": 4.8,
-      "reviewCount": 127,
-      "isVerified": true,
-      "joinDate": "2022-03-15",
-      "responseTime": "Usually responds within 2 hours"
-    },
-    "location": {
-      "city": "Lagos",
-      "state": "Lagos State",
-      "area": "Victoria Island",
-      "distance": "2.3 km away",
-      "coordinates": {"lat": 6.4281, "lng": 3.4219}
-    },
-    "postedDate": "2024-01-15T10:30:00Z",
-    "views": 1247,
-    "likes": 89,
-    "isPromoted": true,
-    "tags": ["negotiable", "original-box", "warranty"]
-  };
-
-  final List<Map<String, dynamic>> similarListings = [
-    {
-      "id": 2,
-      "title": "iPhone 13 Pro - 128GB Blue",
-      "price": "₦650,000",
-      "image":
-          "https://images.pexels.com/photos/1092644/pexels-photo-1092644.jpeg",
-      "condition": "Excellent",
-      "distance": "1.8 km"
-    },
-    {
-      "id": 3,
-      "title": "Samsung Galaxy S23 Ultra",
-      "price": "₦780,000",
-      "image":
-          "https://images.pexels.com/photos/788946/pexels-photo-788946.jpeg",
-      "condition": "Like New",
-      "distance": "3.2 km"
-    },
-    {
-      "id": 4,
-      "title": "iPhone 14 - 256GB Purple",
-      "price": "₦720,000",
-      "image":
-          "https://images.pexels.com/photos/1440727/pexels-photo-1440727.jpeg",
-      "condition": "Good",
-      "distance": "4.1 km"
+    if (args is String) {
+      listingId = args;
+    } else if (args is Map<String, dynamic>) {
+      listingId = args['id']?.toString();
+      // If the full listing data is passed directly, use it
+      if (args.containsKey('title')) {
+        setState(() {
+          listingData = args;
+          _isLoading = false;
+        });
+        _loadSimilarListings(args['category_id']?.toString());
+        return;
+      }
     }
-  ];
+
+    if (listingId != null) {
+      try {
+        final data = await _marketplaceService.getListing(listingId);
+        if (data != null && mounted) {
+          setState(() {
+            listingData = data;
+            _isLoading = false;
+          });
+          _loadSimilarListings(data['category_id']?.toString());
+        } else if (mounted) {
+          setState(() => _isLoading = false);
+        }
+      } catch (e) {
+        if (mounted) setState(() => _isLoading = false);
+      }
+    } else {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _loadSimilarListings(String? categoryId) async {
+    if (categoryId == null) return;
+    try {
+      final listings = await _marketplaceService.getListings(
+        categoryId: categoryId,
+        limit: 4,
+      );
+      if (mounted) {
+        setState(() {
+          similarListings = listings
+              .where((l) => l['id'] != listingData['id'])
+              .take(3)
+              .toList();
+        });
+      }
+    } catch (_) {}
+  }
 
   @override
   void dispose() {
@@ -118,7 +107,6 @@ Serious buyers only. Price slightly negotiable.""",
 
   void _shareListing() {
     HapticFeedback.mediumImpact();
-    // Share functionality would be implemented here
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('Sharing listing...'),
@@ -189,6 +177,55 @@ Serious buyers only. Price slightly negotiable.""",
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return Scaffold(
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (listingData.isEmpty) {
+      return Scaffold(
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        appBar: AppBar(
+          leading: IconButton(
+            icon: Icon(Icons.arrow_back),
+            onPressed: () => Navigator.pop(context),
+          ),
+        ),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CustomIconWidget(iconName: 'search_off', color: Colors.grey, size: 64),
+              SizedBox(height: 16),
+              Text('Listing not found', style: Theme.of(context).textTheme.titleLarge),
+              SizedBox(height: 8),
+              Text('This listing may have been removed.'),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // Extract images safely
+    final images = listingData['images'];
+    final List<String> imageList = images is List
+        ? images.map((e) => e.toString()).toList()
+        : [];
+
+    // Extract seller safely
+    final seller = listingData['seller_id'] is Map<String, dynamic>
+        ? listingData['seller_id'] as Map<String, dynamic>
+        : listingData['seller'] is Map<String, dynamic>
+            ? listingData['seller'] as Map<String, dynamic>
+            : <String, dynamic>{'name': 'Unknown Seller'};
+
+    // Extract location safely
+    final location = listingData['location'] is Map<String, dynamic>
+        ? listingData['location'] as Map<String, dynamic>
+        : <String, dynamic>{'city': listingData['location']?.toString() ?? 'Unknown'};
+
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Stack(
@@ -280,9 +317,18 @@ Serious buyers only. Price slightly negotiable.""",
                   ),
                 ],
                 flexibleSpace: FlexibleSpaceBar(
-                  background: ImageGalleryWidget(
-                    images: (listingData["images"] as List).cast<String>(),
-                  ),
+                  background: imageList.isNotEmpty
+                      ? ImageGalleryWidget(images: imageList)
+                      : Container(
+                          color: Colors.grey[300],
+                          child: Center(
+                            child: CustomIconWidget(
+                              iconName: 'image',
+                              color: Colors.grey,
+                              size: 64,
+                            ),
+                          ),
+                        ),
                 ),
               ),
               SliverToBoxAdapter(
@@ -290,22 +336,15 @@ Serious buyers only. Price slightly negotiable.""",
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     SizedBox(height: 16),
-                    SellerInfoWidget(
-                      seller: listingData["seller"] as Map<String, dynamic>,
-                    ),
+                    SellerInfoWidget(seller: seller),
                     SizedBox(height: 16),
-                    ProductInfoWidget(
-                      listing: listingData,
-                    ),
+                    ProductInfoWidget(listing: listingData),
                     SizedBox(height: 16),
-                    LocationInfoWidget(
-                      location: listingData["location"] as Map<String, dynamic>,
-                    ),
+                    LocationInfoWidget(location: location),
                     SizedBox(height: 16),
-                    SimilarListingsWidget(
-                      listings: similarListings,
-                    ),
-                    SizedBox(height: 100), // Space for bottom actions
+                    if (similarListings.isNotEmpty)
+                      SimilarListingsWidget(listings: similarListings),
+                    SizedBox(height: 100),
                   ],
                 ),
               ),
@@ -315,9 +354,7 @@ Serious buyers only. Price slightly negotiable.""",
             bottom: 0,
             left: 0,
             right: 0,
-            child: ActionButtonsWidget(
-              seller: listingData["seller"] as Map<String, dynamic>,
-            ),
+            child: ActionButtonsWidget(seller: seller),
           ),
         ],
       ),

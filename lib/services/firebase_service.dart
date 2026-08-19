@@ -369,8 +369,8 @@ class FirebaseService {
       if (query != null && query.trim().isNotEmpty) {
         final q = query.toLowerCase();
         results = results.where((item) {
-          final title = (item['title'] as String?)?.toLowerCase() ?? '';
-          final desc = (item['description'] as String?)?.toLowerCase() ?? '';
+          final title = (item['title']?.toString() ?? '').toLowerCase();
+          final desc = (item['description']?.toString() ?? '').toLowerCase();
           return title.contains(q) || desc.contains(q);
         }).toList();
       }
@@ -378,7 +378,7 @@ class FirebaseService {
       if (location != null && location.isNotEmpty) {
         final l = location.toLowerCase();
         results = results.where((item) {
-          final itemLoc = (item['location'] as String?)?.toLowerCase() ?? '';
+          final itemLoc = (item['location']?.toString() ?? '').toLowerCase();
           return itemLoc.contains(l);
         }).toList();
       }

@@ -32,7 +32,7 @@ class RetryConnectionWidget extends StatelessWidget {
             style: AppTheme.lightTheme.textTheme.bodyMedium?.copyWith(
               color: AppTheme.lightTheme.colorScheme.onSurface
                   .withValues(alpha: 0.8),
-              fontSize: 14.sp,
+              fontSize: 16.0,
             ),
             textAlign: TextAlign.center,
           ),
@@ -48,7 +48,7 @@ class RetryConnectionWidget extends StatelessWidget {
               'Retry',
               style: AppTheme.lightTheme.textTheme.labelLarge?.copyWith(
                 color: AppTheme.lightTheme.colorScheme.onPrimary,
-                fontSize: 14.sp,
+                fontSize: 16.0,
               ),
             ),
             style: ElevatedButton.styleFrom(

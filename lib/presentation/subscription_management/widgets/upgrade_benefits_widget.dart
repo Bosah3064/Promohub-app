@@ -42,7 +42,7 @@ class UpgradeBenefitsWidget extends StatelessWidget {
                   child: Icon(
                     Icons.trending_up,
                     color: Colors.white,
-                    size: 20.sp,
+                    size: 22.0,
                   ),
                 ),
                 SizedBox(width: 3.w),
@@ -53,7 +53,7 @@ class UpgradeBenefitsWidget extends StatelessWidget {
                       Text(
                         'Unlock More Potential',
                         style: GoogleFonts.inter(
-                          fontSize: 16.sp,
+                          fontSize: 18.0,
                           fontWeight: FontWeight.w700,
                           color: Colors.grey[800],
                         ),
@@ -61,7 +61,7 @@ class UpgradeBenefitsWidget extends StatelessWidget {
                       Text(
                         'See what you can achieve with an upgrade',
                         style: GoogleFonts.inter(
-                          fontSize: 11.sp,
+                          fontSize: 13.0,
                           color: Colors.grey[600],
                         ),
                       ),
@@ -87,7 +87,7 @@ class UpgradeBenefitsWidget extends StatelessWidget {
                         ),
                         child: Icon(
                           benefit['icon'] as IconData,
-                          size: 16.sp,
+                          size: 18.0,
                           color: benefit['color'] as Color,
                         ),
                       ),
@@ -99,7 +99,7 @@ class UpgradeBenefitsWidget extends StatelessWidget {
                             Text(
                               benefit['title'] as String,
                               style: GoogleFonts.inter(
-                                fontSize: 12.sp,
+                                fontSize: 14.0,
                                 fontWeight: FontWeight.w600,
                                 color: Colors.grey[800],
                               ),
@@ -107,7 +107,7 @@ class UpgradeBenefitsWidget extends StatelessWidget {
                             Text(
                               benefit['description'] as String,
                               style: GoogleFonts.inter(
-                                fontSize: 10.sp,
+                                fontSize: 12.0,
                                 color: Colors.grey[600],
                               ),
                             ),
@@ -159,12 +159,12 @@ class UpgradeBenefitsWidget extends StatelessWidget {
                     Text(
                       'View Upgrade Options',
                       style: GoogleFonts.inter(
-                        fontSize: 13.sp,
+                        fontSize: 15.0,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
                     SizedBox(width: 2.w),
-                    Icon(Icons.arrow_forward, size: 16.sp),
+                    Icon(Icons.arrow_forward, size: 18.0),
                   ],
                 ),
               ),

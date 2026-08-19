@@ -51,7 +51,7 @@ class MotivationBannerWidget extends StatelessWidget {
                     Text(
                       'Hey $userName! 👋',
                       style: GoogleFonts.inter(
-                        fontSize: 18.sp,
+                        fontSize: 20.0,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
                       ),
@@ -60,7 +60,7 @@ class MotivationBannerWidget extends StatelessWidget {
                     Text(
                       _getMotivationalMessage(),
                       style: GoogleFonts.inter(
-                        fontSize: 14.sp,
+                        fontSize: 16.0,
                         color: Colors.white.withAlpha(230),
                       ),
                     ),
@@ -126,7 +126,7 @@ class MotivationBannerWidget extends StatelessWidget {
                 child: Text(
                   'View Achievements',
                   style: GoogleFonts.inter(
-                    fontSize: 14.sp,
+                    fontSize: 16.0,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -160,7 +160,7 @@ class MotivationBannerWidget extends StatelessWidget {
           Text(
             value,
             style: GoogleFonts.inter(
-              fontSize: 16.sp,
+              fontSize: 18.0,
               fontWeight: FontWeight.bold,
               color: Colors.white,
             ),
@@ -168,7 +168,7 @@ class MotivationBannerWidget extends StatelessWidget {
           Text(
             label,
             style: GoogleFonts.inter(
-              fontSize: 12.sp,
+              fontSize: 14.0,
               color: Colors.white.withAlpha(204),
             ),
           ),

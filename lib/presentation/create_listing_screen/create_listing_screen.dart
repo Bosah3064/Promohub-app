@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/app_export.dart';
+import '../../services/marketplace_service.dart';
 import './widgets/advanced_options_widget.dart';
 import './widgets/listing_form_widget.dart';
 import './widgets/photo_upload_widget.dart';
@@ -33,22 +34,16 @@ class _CreateListingScreenState extends State<CreateListingScreen>
   bool _allowDelivery = false;
   bool _allowPickup = true;
 
-  // Mock categories data
-  final List<Map<String, dynamic>> _categories = [
-    {"id": 1, "name": "Electronics", "icon": "phone_android"},
-    {"id": 2, "name": "Vehicles", "icon": "directions_car"},
-    {"id": 3, "name": "Real Estate", "icon": "home"},
-    {"id": 4, "name": "Fashion", "icon": "checkroom"},
-    {"id": 5, "name": "Jobs", "icon": "work"},
-    {"id": 6, "name": "Services", "icon": "build"},
-    {"id": 7, "name": "Sports", "icon": "sports_soccer"},
-    {"id": 8, "name": "Books", "icon": "menu_book"},
-  ];
+  // Dynamic categories from database
+  final MarketplaceService _marketplaceService = MarketplaceService();
+  List<Map<String, dynamic>> _categories = [];
+  bool _isCategoriesLoading = true;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    _loadCategories();
     _startAutoSave();
   }
 
@@ -60,6 +55,22 @@ class _CreateListingScreenState extends State<CreateListingScreen>
     _priceController.dispose();
     _descriptionController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadCategories() async {
+    try {
+      final cats = await _marketplaceService.getCategories();
+      if (mounted) {
+        setState(() {
+          _categories = cats;
+          _isCategoriesLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isCategoriesLoading = false);
+      }
+    }
   }
 
   void _startAutoSave() {
@@ -168,70 +179,136 @@ class _CreateListingScreenState extends State<CreateListingScreen>
       context: context,
       barrierDismissible: false,
       builder: (BuildContext context) {
-        return AlertDialog(
+        return Dialog(
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(24),
           ),
-          title: Row(
-            children: [
-              CustomIconWidget(
-                iconName: 'check_circle',
-                color: AppTheme.lightTheme.colorScheme.secondary,
-                size: 24,
+          elevation: 0,
+          backgroundColor: Colors.transparent,
+          child: Container(
+            padding: EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Color(0xFF6C63FF), Color(0xFF3F3D56)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
-              SizedBox(width: 8),
-              Text(
-                'Listing Published!',
-                style: AppTheme.lightTheme.textTheme.titleLarge,
-              ),
-            ],
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Your listing has been successfully published and is now live on PromoHub.',
-                style: AppTheme.lightTheme.textTheme.bodyMedium,
-              ),
-              SizedBox(height: 16),
-              Text(
-                'Share your listing:',
-                style: AppTheme.lightTheme.textTheme.titleSmall,
-              ),
-              SizedBox(height: 8),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  _buildShareButton('WhatsApp', 'message', () {}),
-                  _buildShareButton('Facebook', 'facebook', () {}),
-                  _buildShareButton('Copy Link', 'link', () {}),
-                ],
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                Navigator.pushNamed(context, '/home-screen');
-              },
-              child: Text('View Listing'),
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(
+                  color: Color(0xFF6C63FF).withValues(alpha: 0.4),
+                  blurRadius: 20,
+                  offset: Offset(0, 10),
+                ),
+              ],
             ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                Navigator.pushNamed(context, '/home-screen');
-              },
-              child: Text('Done'),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.check_circle_outline,
+                    color: Colors.white,
+                    size: 64,
+                  ),
+                ),
+                SizedBox(height: 24),
+                Text(
+                  'Congratulations!',
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    letterSpacing: -0.5,
+                  ),
+                ),
+                SizedBox(height: 12),
+                Text(
+                  'Your listing has been successfully published and is now live on PromoHub.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.white.withValues(alpha: 0.9),
+                    height: 1.5,
+                  ),
+                ),
+                SizedBox(height: 32),
+                Text(
+                  'Share your listing',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white.withValues(alpha: 0.8),
+                  ),
+                ),
+                SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    _buildShareButton('WhatsApp', Icons.message, () {}),
+                    _buildShareButton('Facebook', Icons.facebook, () {}),
+                    _buildShareButton('Copy Link', Icons.link, () {}),
+                  ],
+                ),
+                SizedBox(height: 32),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                          Navigator.pushNamed(context, '/home-screen');
+                        },
+                        style: TextButton.styleFrom(
+                          padding: EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: Text(
+                          'View Listing',
+                          style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 16),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                          Navigator.pushNamed(context, '/home-screen');
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          foregroundColor: Color(0xFF6C63FF),
+                          padding: EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 0,
+                        ),
+                        child: Text(
+                          'Done',
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
-          ],
+          ),
         );
       },
     );
   }
 
-  Widget _buildShareButton(String label, String iconName, VoidCallback onTap) {
+  Widget _buildShareButton(String label, IconData iconData, VoidCallback onTap) {
     return GestureDetector(
       onTap: onTap,
       child: Column(
@@ -240,19 +317,23 @@ class _CreateListingScreenState extends State<CreateListingScreen>
           Container(
             padding: EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: AppTheme.lightTheme.colorScheme.primaryContainer,
-              borderRadius: BorderRadius.circular(12),
+              color: Colors.white.withValues(alpha: 0.15),
+              shape: BoxShape.circle,
             ),
-            child: CustomIconWidget(
-              iconName: iconName,
-              color: AppTheme.lightTheme.colorScheme.primary,
-              size: 20,
+            child: Icon(
+              iconData,
+              color: Colors.white,
+              size: 24,
             ),
           ),
-          SizedBox(height: 4),
+          SizedBox(height: 8),
           Text(
             label,
-            style: AppTheme.lightTheme.textTheme.labelSmall,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: Colors.white.withValues(alpha: 0.9),
+            ),
           ),
         ],
       ),

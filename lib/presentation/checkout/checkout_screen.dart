@@ -223,7 +223,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       child: Text(
                         'Your payment is held securely until you confirm delivery.',
                         style: TextStyle(
-                            fontSize: 10.sp,
+                            fontSize: 12.0,
                             color: AppTheme.primaryLight,
                             fontWeight: FontWeight.w500),
                       ),
@@ -315,11 +315,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                           Text('Nairobi CBD Pickup',
                               style: TextStyle(
                                   fontWeight: FontWeight.w600,
-                                  fontSize: 12.sp)),
+                                  fontSize: 14.0)),
                           Text('Kenyatta Avenue, Nairobi',
                               style: TextStyle(
                                   color: AppTheme.textSecondaryLight,
-                                  fontSize: 10.sp)),
+                                  fontSize: 12.0)),
                         ],
                       ),
                     ),
@@ -422,7 +422,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     child: Text(
                       'PromoHub Buyer Protection: Your money is held safely until you confirm delivery.',
                       style: TextStyle(
-                          fontSize: 10.sp,
+                          fontSize: 12.0,
                           color: AppTheme.primaryLight,
                           fontWeight: FontWeight.w500),
                     ),
@@ -463,7 +463,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                 ? 'Pay with M-Pesa'
                                 : 'Pay with Card',
                             style: TextStyle(
-                                fontSize: 14.sp, fontWeight: FontWeight.w700),
+                                fontSize: 16.0, fontWeight: FontWeight.w700),
                           ),
                         ],
                       ),
@@ -523,13 +523,13 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             Text(label,
                 style: TextStyle(
                     fontWeight: FontWeight.w600,
-                    fontSize: 11.sp,
+                    fontSize: 13.0,
                     color: isSelected
                         ? AppTheme.primaryLight
                         : AppTheme.textPrimaryLight)),
             Text(price,
                 style: TextStyle(
-                    fontSize: 10.sp,
+                    fontSize: 12.0,
                     fontWeight: FontWeight.w700,
                     color: isSelected
                         ? AppTheme.primaryLight
@@ -578,7 +578,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 children: [
                   Text(title,
                       style: TextStyle(
-                          fontWeight: FontWeight.w700, fontSize: 12.sp)),
+                          fontWeight: FontWeight.w700, fontSize: 14.0)),
                   Text(subtitle,
                       style: TextStyle(
                           fontSize: 9.sp, color: AppTheme.textSecondaryLight)),
@@ -599,7 +599,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       children: [
         Text(label,
             style: TextStyle(
-              fontSize: isBold ? 13.sp : 11.sp,
+              fontSize: isBold ? 15.0 : 13.0,
               fontWeight: isBold ? FontWeight.w800 : FontWeight.w400,
               color: isBold
                   ? AppTheme.textPrimaryLight
@@ -607,7 +607,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             )),
         Text(value,
             style: TextStyle(
-              fontSize: isBold ? 14.sp : 11.sp,
+              fontSize: isBold ? 16.0 : 13.0,
               fontWeight: isBold ? FontWeight.w800 : FontWeight.w500,
               color: isBold ? AppTheme.primaryLight : AppTheme.textPrimaryLight,
             )),

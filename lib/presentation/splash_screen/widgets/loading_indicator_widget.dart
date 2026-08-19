@@ -73,7 +73,7 @@ class _LoadingIndicatorWidgetState extends State<LoadingIndicatorWidget>
           style: AppTheme.lightTheme.textTheme.bodyMedium?.copyWith(
             color: AppTheme.lightTheme.colorScheme.onSurface
                 .withValues(alpha: 0.8),
-            fontSize: 12.sp,
+            fontSize: 14.0,
           ),
           textAlign: TextAlign.center,
         ),

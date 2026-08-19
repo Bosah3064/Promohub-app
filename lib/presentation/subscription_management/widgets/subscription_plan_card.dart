@@ -58,7 +58,7 @@ class SubscriptionPlanCard extends StatelessWidget {
                           Text(
                             plan['name'],
                             style: GoogleFonts.inter(
-                              fontSize: 16.sp,
+                              fontSize: 18.0,
                               fontWeight: FontWeight.w700,
                               color: Colors.grey[800],
                             ),
@@ -67,7 +67,7 @@ class SubscriptionPlanCard extends StatelessWidget {
                           Text(
                             plan['description'],
                             style: GoogleFonts.inter(
-                              fontSize: 11.sp,
+                              fontSize: 13.0,
                               color: Colors.grey[600],
                             ),
                           ),
@@ -103,7 +103,7 @@ class SubscriptionPlanCard extends StatelessWidget {
                   Text(
                     'FREE',
                     style: GoogleFonts.inter(
-                      fontSize: 24.sp,
+                      fontSize: 28.0,
                       fontWeight: FontWeight.w800,
                       color: Colors.green[600],
                     ),
@@ -111,7 +111,7 @@ class SubscriptionPlanCard extends StatelessWidget {
                   Text(
                     'Forever',
                     style: GoogleFonts.inter(
-                      fontSize: 11.sp,
+                      fontSize: 13.0,
                       color: Colors.grey[600],
                     ),
                   ),
@@ -122,7 +122,7 @@ class SubscriptionPlanCard extends StatelessWidget {
                       Text(
                         'KSh ${plan['price_ksh'].toStringAsFixed(0)}',
                         style: GoogleFonts.inter(
-                          fontSize: 20.sp,
+                          fontSize: 22.0,
                           fontWeight: FontWeight.w800,
                           color: Colors.grey[800],
                         ),
@@ -130,7 +130,7 @@ class SubscriptionPlanCard extends StatelessWidget {
                       Text(
                         '/month',
                         style: GoogleFonts.inter(
-                          fontSize: 11.sp,
+                          fontSize: 13.0,
                           color: Colors.grey[600],
                         ),
                       ),
@@ -139,7 +139,7 @@ class SubscriptionPlanCard extends StatelessWidget {
                   Text(
                     'USD \$${plan['price_usd'].toStringAsFixed(2)}/month',
                     style: GoogleFonts.inter(
-                      fontSize: 10.sp,
+                      fontSize: 12.0,
                       color: Colors.grey[500],
                     ),
                   ),
@@ -164,7 +164,7 @@ class SubscriptionPlanCard extends StatelessWidget {
                         plan['product_limit'] == null
                             ? Icons.all_inclusive
                             : Icons.inventory_2,
-                        size: 16.sp,
+                        size: 18.0,
                         color:
                             isPremium ? Colors.purple[600] : Colors.blue[600],
                       ),
@@ -174,7 +174,7 @@ class SubscriptionPlanCard extends StatelessWidget {
                             ? 'Unlimited Listings'
                             : '${plan['product_limit']} Listings',
                         style: GoogleFonts.inter(
-                          fontSize: 12.sp,
+                          fontSize: 14.0,
                           fontWeight: FontWeight.w600,
                           color:
                               isPremium ? Colors.purple[700] : Colors.blue[700],
@@ -190,7 +190,7 @@ class SubscriptionPlanCard extends StatelessWidget {
                 Text(
                   'Features:',
                   style: GoogleFonts.inter(
-                    fontSize: 12.sp,
+                    fontSize: 14.0,
                     fontWeight: FontWeight.w600,
                     color: Colors.grey[700],
                   ),
@@ -203,7 +203,7 @@ class SubscriptionPlanCard extends StatelessWidget {
                         children: [
                           Icon(
                             Icons.check_circle,
-                            size: 14.sp,
+                            size: 16.0,
                             color: Colors.green[600],
                           ),
                           SizedBox(width: 2.w),
@@ -211,7 +211,7 @@ class SubscriptionPlanCard extends StatelessWidget {
                             child: Text(
                               feature,
                               style: GoogleFonts.inter(
-                                fontSize: 11.sp,
+                                fontSize: 13.0,
                                 color: Colors.grey[600],
                               ),
                             ),
@@ -226,7 +226,7 @@ class SubscriptionPlanCard extends StatelessWidget {
                     child: Text(
                       '+${features.length - 4} more features',
                       style: GoogleFonts.inter(
-                        fontSize: 10.sp,
+                        fontSize: 12.0,
                         color: Colors.grey[500],
                         fontStyle: FontStyle.italic,
                       ),
@@ -262,7 +262,7 @@ class SubscriptionPlanCard extends StatelessWidget {
                               ? 'Switch to Free'
                               : 'Upgrade Now',
                       style: GoogleFonts.inter(
-                        fontSize: 13.sp,
+                        fontSize: 15.0,
                         fontWeight: FontWeight.w600,
                       ),
                     ),

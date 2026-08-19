@@ -114,44 +114,20 @@ class ListingCardWidget extends StatelessWidget {
                       listing['title'] as String,
                       style: AppTheme.lightTheme.textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                        color: Colors.black87,
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    SizedBox(height: 0.5.h),
+                    const SizedBox(height: 4),
                     Text(
                       listing['price'] as String,
                       style:
                           AppTheme.lightTheme.textTheme.titleMedium?.copyWith(
-                        color: AppTheme.lightTheme.colorScheme.primary,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    Spacer(),
-                    Row(
-                      children: [
-                        CustomIconWidget(
-                          iconName: 'location_on',
-                          color:
-                              AppTheme.lightTheme.colorScheme.onSurfaceVariant,
-                          size: 12,
-                        ),
-                        SizedBox(width: 1.w),
-                        Expanded(
-                          child: Text(
-                            listing['location'] as String,
-                            style: AppTheme.lightTheme.textTheme.bodySmall,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 0.5.h),
-                    Text(
-                      listing['timePosted'] as String,
-                      style: AppTheme.lightTheme.textTheme.bodySmall?.copyWith(
-                        color: AppTheme.lightTheme.colorScheme.onSurfaceVariant,
+                        color: Colors.black,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 15,
                       ),
                     ),
                   ],

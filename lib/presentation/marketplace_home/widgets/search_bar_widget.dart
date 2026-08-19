@@ -81,7 +81,7 @@ class _SearchBarWidgetState extends State<SearchBarWidget> {
                     'PromoHub',
                     style: TextStyle(
                       color: Colors.white,
-                      fontSize: 18.sp,
+                      fontSize: 20.0,
                       fontWeight: FontWeight.w800,
                       letterSpacing: 0.5,
                     ),
@@ -154,7 +154,7 @@ class _SearchBarWidgetState extends State<SearchBarWidget> {
                       hintText: 'Search for anything...',
                       hintStyle: TextStyle(
                         color: AppTheme.textSecondaryLight,
-                        fontSize: 13.sp,
+                        fontSize: 15.0,
                       ),
                       prefixIcon: Padding(
                         padding: EdgeInsets.all(3.w),

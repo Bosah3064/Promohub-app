@@ -55,15 +55,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           categories = List<Map<String, dynamic>>.from(results[2]);
           recentListings = List<Map<String, dynamic>>.from(results[3]);
           
-          // Fallback if categories are empty
-          if (categories.isEmpty) {
-            categories = [
-              {"name": "Electronics", "icon": "devices", "isActive": false},
-              {"name": "Vehicles", "icon": "directions_car", "isActive": false},
-              {"name": "Fashion", "icon": "checkroom", "isActive": false},
-              {"name": "Real Estate", "icon": "home", "isActive": false},
-            ];
-          }
+          // Empty state handling will be done in the UI
           _isLoading = false;
         });
       }

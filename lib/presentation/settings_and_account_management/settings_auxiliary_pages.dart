@@ -162,7 +162,7 @@ class FAQScreen extends StatelessWidget {
     {
       "question": "How do I contact customer support?",
       "answer":
-          "You can reach out to us via Live Chat in the Settings menu, or email us directly at support@promohub.app."
+          "You can reach out to us via Live Chat in the Settings menu, or email us directly at support@PromoHub.app."
     },
   ];
 

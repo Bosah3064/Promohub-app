@@ -40,7 +40,7 @@ class LocationDetectionWidget extends StatelessWidget {
                   child: Icon(
                     Icons.my_location,
                     color: Colors.white,
-                    size: 20.sp,
+                    size: 22.0,
                   ),
                 ),
                 SizedBox(width: 3.w),
@@ -51,7 +51,7 @@ class LocationDetectionWidget extends StatelessWidget {
                       Text(
                         'Auto-Detect Location',
                         style: GoogleFonts.inter(
-                          fontSize: 14.sp,
+                          fontSize: 16.0,
                           fontWeight: FontWeight.w700,
                           color: Colors.grey[800],
                         ),
@@ -59,7 +59,7 @@ class LocationDetectionWidget extends StatelessWidget {
                       Text(
                         'Use GPS to automatically set your location and currency',
                         style: GoogleFonts.inter(
-                          fontSize: 11.sp,
+                          fontSize: 13.0,
                           color: Colors.grey[600],
                         ),
                       ),
@@ -76,19 +76,19 @@ class LocationDetectionWidget extends StatelessWidget {
                 onPressed: isDetecting ? null : onDetectLocation,
                 icon: isDetecting
                     ? SizedBox(
-                        width: 16.sp,
-                        height: 16.sp,
+                        width: 18.0,
+                        height: 18.0,
                         child: const CircularProgressIndicator(
                           strokeWidth: 2,
                           valueColor:
                               AlwaysStoppedAnimation<Color>(Colors.white),
                         ),
                       )
-                    : Icon(Icons.gps_fixed, size: 16.sp),
+                    : Icon(Icons.gps_fixed, size: 18.0),
                 label: Text(
                   isDetecting ? 'Detecting...' : 'Detect My Location',
                   style: GoogleFonts.inter(
-                    fontSize: 12.sp,
+                    fontSize: 14.0,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -107,7 +107,7 @@ class LocationDetectionWidget extends StatelessWidget {
               children: [
                 Icon(
                   Icons.info_outline,
-                  size: 14.sp,
+                  size: 16.0,
                   color: Colors.blue[600],
                 ),
                 SizedBox(width: 2.w),

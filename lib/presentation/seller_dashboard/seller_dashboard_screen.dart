@@ -86,7 +86,14 @@ class _SellerDashboardScreenState extends State<SellerDashboardScreen> {
   String _formatTime(dynamic createdAt) {
     if (createdAt == null) return 'Recently';
     try {
-      final dt = DateTime.parse(createdAt.toString());
+      DateTime dt;
+      if (createdAt is String) {
+        dt = DateTime.parse(createdAt);
+      } else if (createdAt.runtimeType.toString() == 'Timestamp') {
+        dt = createdAt.toDate();
+      } else {
+        dt = DateTime.parse(createdAt.toString());
+      }
       final diff = DateTime.now().difference(dt);
       if (diff.inMinutes < 5) return 'Just now';
       if (diff.inHours < 1) return '${diff.inMinutes}m ago';
@@ -267,13 +274,13 @@ class _SellerDashboardScreenState extends State<SellerDashboardScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Available Balance', style: TextStyle(color: Colors.white70, fontSize: 11.sp, fontWeight: FontWeight.w500)),
+              Text('Available Balance', style: TextStyle(color: Colors.white70, fontSize: 13.0, fontWeight: FontWeight.w500)),
               GestureDetector(
                 onTap: _showWithdrawBottomSheet,
                 child: Container(
                   padding: EdgeInsets.symmetric(horizontal: 3.w, vertical: 0.8.h),
                   decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(8)),
-                  child: Text('Withdraw', style: TextStyle(color: Colors.white, fontSize: 10.sp, fontWeight: FontWeight.w600)),
+                  child: Text('Withdraw', style: TextStyle(color: Colors.white, fontSize: 12.0, fontWeight: FontWeight.w600)),
                 ),
               ),
             ],
@@ -281,7 +288,7 @@ class _SellerDashboardScreenState extends State<SellerDashboardScreen> {
           SizedBox(height: 1.h),
           Text(
             'KSh ${_shopDetails?['balance']?.toStringAsFixed(0) ?? 0}',
-            style: TextStyle(color: Colors.white, fontSize: 24.sp, fontWeight: FontWeight.w800),
+            style: TextStyle(color: Colors.white, fontSize: 28.0, fontWeight: FontWeight.w800),
           ),
           SizedBox(height: 2.h),
           Row(
@@ -289,7 +296,7 @@ class _SellerDashboardScreenState extends State<SellerDashboardScreen> {
               Icon(Icons.pending_actions, color: Colors.white70, size: 16),
               SizedBox(width: 1.w),
               Text('KSh ${_shopDetails?['pending']?.toStringAsFixed(0) ?? 0} clearing soon', 
-                style: TextStyle(color: Colors.white70, fontSize: 10.sp)),
+                style: TextStyle(color: Colors.white70, fontSize: 12.0)),
             ],
           ),
         ],
@@ -316,8 +323,8 @@ class _SellerDashboardScreenState extends State<SellerDashboardScreen> {
             child: Icon(icon, color: color, size: 24),
           ),
           SizedBox(height: 2.h),
-          Text(value, style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.w800, color: AppTheme.textPrimaryLight)),
-          Text(title, style: TextStyle(fontSize: 10.sp, color: AppTheme.textSecondaryLight, fontWeight: FontWeight.w500)),
+          Text(value, style: TextStyle(fontSize: 20.0, fontWeight: FontWeight.w800, color: AppTheme.textPrimaryLight)),
+          Text(title, style: TextStyle(fontSize: 12.0, color: AppTheme.textSecondaryLight, fontWeight: FontWeight.w500)),
         ],
       ),
     );
@@ -326,7 +333,7 @@ class _SellerDashboardScreenState extends State<SellerDashboardScreen> {
   Widget _buildSectionHeader(String title) {
     return Text(
       title,
-      style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w700, color: AppTheme.textPrimaryLight),
+      style: TextStyle(fontSize: 16.0, fontWeight: FontWeight.w700, color: AppTheme.textPrimaryLight),
     );
   }
 
@@ -357,16 +364,16 @@ class _SellerDashboardScreenState extends State<SellerDashboardScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Next Payout (Est.)', style: TextStyle(fontSize: 10.sp, color: AppTheme.textSecondaryLight)),
-                    Text('KSh 12,450', style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w800, color: AppTheme.textPrimaryLight)),
+                    Text('Next Payout (Est.)', style: TextStyle(fontSize: 12.0, color: AppTheme.textSecondaryLight)),
+                    Text('KSh 12,450', style: TextStyle(fontSize: 16.0, fontWeight: FontWeight.w800, color: AppTheme.textPrimaryLight)),
                   ],
                 ),
               ),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text('Status', style: TextStyle(fontSize: 10.sp, color: AppTheme.textSecondaryLight)),
-                  Text('Processing', style: TextStyle(fontSize: 11.sp, fontWeight: FontWeight.w600, color: AppTheme.secondaryLight)),
+                  Text('Status', style: TextStyle(fontSize: 12.0, color: AppTheme.textSecondaryLight)),
+                  Text('Processing', style: TextStyle(fontSize: 13.0, fontWeight: FontWeight.w600, color: AppTheme.secondaryLight)),
                 ],
               ),
             ],
@@ -377,8 +384,8 @@ class _SellerDashboardScreenState extends State<SellerDashboardScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Pending Commissions Deduction:', style: TextStyle(fontSize: 10.sp, color: AppTheme.textSecondaryLight)),
-              Text('KSh 850', style: TextStyle(fontSize: 10.sp, fontWeight: FontWeight.w700, color: AppTheme.errorLight)),
+              Text('Pending Commissions Deduction:', style: TextStyle(fontSize: 12.0, color: AppTheme.textSecondaryLight)),
+              Text('KSh 850', style: TextStyle(fontSize: 12.0, fontWeight: FontWeight.w700, color: AppTheme.errorLight)),
             ],
           ),
         ],
@@ -473,7 +480,7 @@ class _SellerDashboardScreenState extends State<SellerDashboardScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(id, style: TextStyle(fontWeight: FontWeight.w700, fontSize: 11.sp)),
+                  Text(id, style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13.0)),
                   Text(time, style: TextStyle(color: AppTheme.textSecondaryLight, fontSize: 9.sp)),
                 ],
               ),
@@ -481,12 +488,12 @@ class _SellerDashboardScreenState extends State<SellerDashboardScreen> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Text(amount, style: TextStyle(fontWeight: FontWeight.w700, fontSize: 11.sp, color: AppTheme.primaryLight)),
+                Text(amount, style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13.0, color: AppTheme.primaryLight)),
                 SizedBox(height: 0.5.h),
                 Container(
                   padding: EdgeInsets.symmetric(horizontal: 2.w, vertical: 0.3.h),
                   decoration: BoxDecoration(color: statusColor.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(6)),
-                  child: Text(status.toUpperCase(), style: TextStyle(color: statusColor, fontSize: 8.sp, fontWeight: FontWeight.w700)),
+                  child: Text(status.toUpperCase(), style: TextStyle(color: statusColor, fontSize: 10.0, fontWeight: FontWeight.w700)),
                 ),
               ],
             ),
@@ -527,9 +534,9 @@ class _SellerDashboardScreenState extends State<SellerDashboardScreen> {
                   ),
                 ),
                 SizedBox(height: 2.5.h),
-                Text('Withdraw to M-Pesa', style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w800)),
+                Text('Withdraw to M-Pesa', style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.w800)),
                 SizedBox(height: 0.5.h),
-                Text('Available: KSh ${available.toStringAsFixed(0)}', style: TextStyle(fontSize: 11.sp, color: AppTheme.textSecondaryLight)),
+                Text('Available: KSh ${available.toStringAsFixed(0)}', style: TextStyle(fontSize: 13.0, color: AppTheme.textSecondaryLight)),
                 SizedBox(height: 2.5.h),
                 TextField(
                   controller: amountController,
@@ -558,7 +565,7 @@ class _SellerDashboardScreenState extends State<SellerDashboardScreen> {
                             side: BorderSide(color: AppTheme.primaryLight.withValues(alpha: 0.3)),
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                           ),
-                          child: Text('KSh $amt', style: TextStyle(fontSize: 10.sp)),
+                          child: Text('KSh $amt', style: TextStyle(fontSize: 12.0)),
                         ),
                       ),
                     );
@@ -591,7 +598,7 @@ class _SellerDashboardScreenState extends State<SellerDashboardScreen> {
                         ? SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
                         : const Icon(Icons.send_rounded),
                     label: Text(isProcessing ? 'Processing...' : 'Withdraw via M-Pesa',
-                        style: TextStyle(fontSize: 12.sp, fontWeight: FontWeight.w700)),
+                        style: TextStyle(fontSize: 14.0, fontWeight: FontWeight.w700)),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppTheme.primaryLight,
                       foregroundColor: Colors.white,

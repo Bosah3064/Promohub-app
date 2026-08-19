@@ -55,8 +55,13 @@ class _SellerRegistrationScreenState extends State<SellerRegistrationScreen> {
   Future<void> _pickDocument() async {
     try {
       final XFile? image = await _picker.pickImage(
-          source: ImageSource.gallery, imageQuality: 70);
+          source: ImageSource.gallery, imageQuality: 85, maxWidth: 2400);
       if (image != null) {
+        final sizeInBytes = await File(image.path).length();
+        if (sizeInBytes > 5 * 1024 * 1024) {
+          Fluttertoast.showToast(msg: 'Document must be smaller than 5MB');
+          return;
+        }
         setState(() {
           _kycDocument = File(image.path);
         });
@@ -76,21 +81,16 @@ class _SellerRegistrationScreenState extends State<SellerRegistrationScreen> {
       Fluttertoast.showToast(msg: 'Please upload a KYC document photo');
       return;
     }
+    if (_idNumberController.text.trim().length < 4) {
+      Fluttertoast.showToast(msg: 'Enter a valid document number');
+      return;
+    }
 
     setState(() => _isLoading = true);
 
     try {
       final userId = _firebaseService.currentUserId;
       if (userId == null) throw Exception('Not authenticated');
-
-      String docUrl = 'pending_upload';
-      try {
-        final path = '$userId/kyc_${DateTime.now().millisecondsSinceEpoch}.jpg';
-        docUrl = await _firebaseService.uploadImage(
-            'kyc_documents', path, _kycDocument);
-      } catch (e) {
-        Fluttertoast.showToast(msg: 'Image upload failed, proceeding anyway.');
-      }
 
       final shopData = {
         'owner_id': userId,
@@ -101,13 +101,26 @@ class _SellerRegistrationScreenState extends State<SellerRegistrationScreen> {
             .replaceAll(RegExp(r'[^a-z0-9]+'), '-'),
         'description': _shopDescriptionController.text.trim(),
         'location': _locationController.text.trim(),
+        'phone': _phoneController.text.trim(),
         'status': 'pending_verification'
       };
 
       final shop = await _marketplaceService.createShop(shopData);
+      final shopId = shop['id']?.toString();
+      if (shopId == null || shopId.isEmpty) {
+        throw Exception('Could not create the shop record');
+      }
+
+      final path =
+          'kyc/$shopId/kyc_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final docUrl = await _firebaseService.uploadImage(
+        'kyc',
+        path,
+        _kycDocument!,
+      );
 
       final kycData = {
-        'shop_id': shop['id'],
+        'shop_id': shopId,
         'seller_type': _sellerType,
         'document_type': _documentType,
         'document_url': docUrl,
@@ -223,7 +236,7 @@ class _SellerRegistrationScreenState extends State<SellerRegistrationScreen> {
             child: Text(label,
                 style: TextStyle(
                     fontWeight: done ? FontWeight.w600 : FontWeight.w400,
-                    fontSize: 11.sp)),
+                    fontSize: 13.0)),
           ),
           Text(status,
               style: TextStyle(
@@ -247,292 +260,298 @@ class _SellerRegistrationScreenState extends State<SellerRegistrationScreen> {
         backgroundColor: Colors.transparent,
         foregroundColor: AppTheme.textPrimaryLight,
       ),
-      body: Form(
-        key: _formKey,
-        child: Stepper(
-          currentStep: _currentStep,
-          onStepContinue: () {
-            if (_currentStep < 2) {
-              setState(() => _currentStep++);
-            } else {
-              _submitRegistration();
-            }
-          },
-          onStepCancel: () {
-            if (_currentStep > 0) setState(() => _currentStep--);
-          },
-          controlsBuilder: (context, details) {
-            return Padding(
-              padding: EdgeInsets.only(top: 2.h),
-              child: Row(
-                children: [
-                  Expanded(
-                    flex: 2,
-                    child: ElevatedButton(
-                      onPressed: _isLoading ? null : details.onStepContinue,
-                      style: ElevatedButton.styleFrom(
-                        padding: EdgeInsets.symmetric(vertical: 1.8.h),
-                      ),
-                      child: _isLoading && _currentStep == 2
-                          ? SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                  color: Colors.white, strokeWidth: 2))
-                          : Text(_currentStep == 2
-                              ? 'Submit Application'
-                              : 'Continue'),
-                    ),
-                  ),
-                  if (_currentStep > 0) ...[
-                    SizedBox(width: 3.w),
+      body: SafeArea(
+        child: Form(
+          key: _formKey,
+          child: Stepper(
+            currentStep: _currentStep,
+            onStepContinue: () {
+              if (_currentStep < 2) {
+                setState(() => _currentStep++);
+              } else {
+                _submitRegistration();
+              }
+            },
+            onStepCancel: () {
+              if (_currentStep > 0) setState(() => _currentStep--);
+            },
+            controlsBuilder: (context, details) {
+              return Padding(
+                padding: EdgeInsets.only(top: 2.h),
+                child: Row(
+                  children: [
                     Expanded(
-                      child: OutlinedButton(
-                        onPressed: details.onStepCancel,
-                        child: const Text('Back'),
+                      flex: 2,
+                      child: ElevatedButton(
+                        onPressed: _isLoading ? null : details.onStepContinue,
+                        style: ElevatedButton.styleFrom(
+                          padding: EdgeInsets.symmetric(vertical: 1.8.h),
+                        ),
+                        child: _isLoading && _currentStep == 2
+                            ? SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                    color: Colors.white, strokeWidth: 2))
+                            : Text(_currentStep == 2
+                                ? 'Submit Application'
+                                : 'Continue'),
+                      ),
+                    ),
+                    if (_currentStep > 0) ...[
+                      SizedBox(width: 3.w),
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: details.onStepCancel,
+                          child: const Text('Back'),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              );
+            },
+            steps: [
+              // Step 1: Store Info
+              Step(
+                title: Text('Store Information',
+                    style: TextStyle(fontWeight: FontWeight.w600)),
+                subtitle: Text('Name, description, location'),
+                isActive: _currentStep >= 0,
+                state:
+                    _currentStep > 0 ? StepState.complete : StepState.indexed,
+                content: Column(
+                  children: [
+                    SizedBox(height: 1.h),
+                    TextFormField(
+                      controller: _shopNameController,
+                      decoration: InputDecoration(
+                        labelText: 'Store Name',
+                        hintText: 'e.g., TechWorld Kenya',
+                        prefixIcon: Icon(Icons.store_outlined,
+                            color: AppTheme.primaryLight),
+                      ),
+                      validator: (v) =>
+                          v!.trim().isEmpty ? 'Store name is required' : null,
+                    ),
+                    SizedBox(height: 2.h),
+                    TextFormField(
+                      controller: _shopDescriptionController,
+                      decoration: InputDecoration(
+                        labelText: 'Store Description',
+                        hintText: 'What does your store sell?',
+                        prefixIcon: Icon(Icons.description_outlined,
+                            color: AppTheme.primaryLight),
+                      ),
+                      maxLines: 3,
+                    ),
+                    SizedBox(height: 2.h),
+                    TextFormField(
+                      controller: _locationController,
+                      decoration: InputDecoration(
+                        labelText: 'Store Location',
+                        hintText: 'e.g., Nairobi, Kenya',
+                        prefixIcon: Icon(Icons.location_on_outlined,
+                            color: AppTheme.primaryLight),
+                      ),
+                      validator: (v) =>
+                          v!.trim().isEmpty ? 'Location is required' : null,
+                    ),
+                    SizedBox(height: 2.h),
+                    TextFormField(
+                      controller: _phoneController,
+                      decoration: InputDecoration(
+                        labelText: 'Business Phone',
+                        hintText: '+254 7XX XXX XXX',
+                        prefixIcon: Icon(Icons.phone_outlined,
+                            color: AppTheme.primaryLight),
+                      ),
+                      keyboardType: TextInputType.phone,
+                    ),
+                  ],
+                ),
+              ),
+              // Step 2: KYC
+              Step(
+                title: Text('KYC Verification',
+                    style: TextStyle(fontWeight: FontWeight.w600)),
+                subtitle: Text('Identity & document verification'),
+                isActive: _currentStep >= 1,
+                state:
+                    _currentStep > 1 ? StepState.complete : StepState.indexed,
+                content: Column(
+                  children: [
+                    SizedBox(height: 1.h),
+                    DropdownButtonFormField<String>(
+                      initialValue: _sellerType,
+                      decoration: InputDecoration(
+                        labelText: 'Seller Type',
+                        prefixIcon: Icon(Icons.person_outline,
+                            color: AppTheme.primaryLight),
+                      ),
+                      items: const [
+                        DropdownMenuItem(
+                            value: 'individual', child: Text('Individual')),
+                        DropdownMenuItem(
+                            value: 'business',
+                            child: Text('Registered Business')),
+                      ],
+                      onChanged: (val) => setState(() => _sellerType = val!),
+                    ),
+                    SizedBox(height: 2.h),
+                    DropdownButtonFormField<String>(
+                      initialValue: _documentType,
+                      decoration: InputDecoration(
+                        labelText: 'Document Type',
+                        prefixIcon: Icon(Icons.badge_outlined,
+                            color: AppTheme.primaryLight),
+                      ),
+                      items: _docTypes
+                          .map(
+                              (t) => DropdownMenuItem(value: t, child: Text(t)))
+                          .toList(),
+                      onChanged: (val) => setState(() => _documentType = val!),
+                    ),
+                    SizedBox(height: 2.h),
+                    TextFormField(
+                      controller: _idNumberController,
+                      decoration: InputDecoration(
+                        labelText: 'Document / ID Number',
+                        prefixIcon:
+                            Icon(Icons.numbers, color: AppTheme.primaryLight),
+                      ),
+                      validator: (v) =>
+                          v!.trim().isEmpty ? 'ID Number is required' : null,
+                    ),
+                    SizedBox(height: 2.h),
+                    // Upload document
+                    InkWell(
+                      onTap: _pickDocument,
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        width: double.infinity,
+                        padding: EdgeInsets.all(4.w),
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                              color: AppTheme.dividerLight, width: 1.5),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: _kycDocument != null
+                            ? Column(
+                                children: [
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(8),
+                                    child: Image.file(_kycDocument!,
+                                        height: 15.h,
+                                        width: double.infinity,
+                                        fit: BoxFit.cover),
+                                  ),
+                                  SizedBox(height: 1.h),
+                                  Text('Tap to change image',
+                                      style: TextStyle(
+                                          color: AppTheme.primaryLight,
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 12.0)),
+                                ],
+                              )
+                            : Column(
+                                children: [
+                                  Icon(Icons.cloud_upload_outlined,
+                                      size: 40,
+                                      color: AppTheme.primaryLight
+                                          .withValues(alpha: 0.5)),
+                                  SizedBox(height: 1.h),
+                                  Text('Upload Document Photo',
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 14.0)),
+                                  Text('JPG, PNG up to 5MB',
+                                      style: TextStyle(
+                                          color: AppTheme.textSecondaryLight,
+                                          fontSize: 12.0)),
+                                ],
+                              ),
                       ),
                     ),
                   ],
-                ],
+                ),
               ),
-            );
-          },
-          steps: [
-            // Step 1: Store Info
-            Step(
-              title: Text('Store Information',
-                  style: TextStyle(fontWeight: FontWeight.w600)),
-              subtitle: Text('Name, description, location'),
-              isActive: _currentStep >= 0,
-              state: _currentStep > 0 ? StepState.complete : StepState.indexed,
-              content: Column(
-                children: [
-                  SizedBox(height: 1.h),
-                  TextFormField(
-                    controller: _shopNameController,
-                    decoration: InputDecoration(
-                      labelText: 'Store Name',
-                      hintText: 'e.g., TechWorld Kenya',
-                      prefixIcon: Icon(Icons.store_outlined,
-                          color: AppTheme.primaryLight),
-                    ),
-                    validator: (v) =>
-                        v!.trim().isEmpty ? 'Store name is required' : null,
-                  ),
-                  SizedBox(height: 2.h),
-                  TextFormField(
-                    controller: _shopDescriptionController,
-                    decoration: InputDecoration(
-                      labelText: 'Store Description',
-                      hintText: 'What does your store sell?',
-                      prefixIcon: Icon(Icons.description_outlined,
-                          color: AppTheme.primaryLight),
-                    ),
-                    maxLines: 3,
-                  ),
-                  SizedBox(height: 2.h),
-                  TextFormField(
-                    controller: _locationController,
-                    decoration: InputDecoration(
-                      labelText: 'Store Location',
-                      hintText: 'e.g., Nairobi, Kenya',
-                      prefixIcon: Icon(Icons.location_on_outlined,
-                          color: AppTheme.primaryLight),
-                    ),
-                    validator: (v) =>
-                        v!.trim().isEmpty ? 'Location is required' : null,
-                  ),
-                  SizedBox(height: 2.h),
-                  TextFormField(
-                    controller: _phoneController,
-                    decoration: InputDecoration(
-                      labelText: 'Business Phone',
-                      hintText: '+254 7XX XXX XXX',
-                      prefixIcon: Icon(Icons.phone_outlined,
-                          color: AppTheme.primaryLight),
-                    ),
-                    keyboardType: TextInputType.phone,
-                  ),
-                ],
-              ),
-            ),
-            // Step 2: KYC
-            Step(
-              title: Text('KYC Verification',
-                  style: TextStyle(fontWeight: FontWeight.w600)),
-              subtitle: Text('Identity & document verification'),
-              isActive: _currentStep >= 1,
-              state: _currentStep > 1 ? StepState.complete : StepState.indexed,
-              content: Column(
-                children: [
-                  SizedBox(height: 1.h),
-                  DropdownButtonFormField<String>(
-                    initialValue: _sellerType,
-                    decoration: InputDecoration(
-                      labelText: 'Seller Type',
-                      prefixIcon: Icon(Icons.person_outline,
-                          color: AppTheme.primaryLight),
-                    ),
-                    items: const [
-                      DropdownMenuItem(
-                          value: 'individual', child: Text('Individual')),
-                      DropdownMenuItem(
-                          value: 'business',
-                          child: Text('Registered Business')),
-                    ],
-                    onChanged: (val) => setState(() => _sellerType = val!),
-                  ),
-                  SizedBox(height: 2.h),
-                  DropdownButtonFormField<String>(
-                    initialValue: _documentType,
-                    decoration: InputDecoration(
-                      labelText: 'Document Type',
-                      prefixIcon: Icon(Icons.badge_outlined,
-                          color: AppTheme.primaryLight),
-                    ),
-                    items: _docTypes
-                        .map((t) => DropdownMenuItem(value: t, child: Text(t)))
-                        .toList(),
-                    onChanged: (val) => setState(() => _documentType = val!),
-                  ),
-                  SizedBox(height: 2.h),
-                  TextFormField(
-                    controller: _idNumberController,
-                    decoration: InputDecoration(
-                      labelText: 'Document / ID Number',
-                      prefixIcon:
-                          Icon(Icons.numbers, color: AppTheme.primaryLight),
-                    ),
-                    validator: (v) =>
-                        v!.trim().isEmpty ? 'ID Number is required' : null,
-                  ),
-                  SizedBox(height: 2.h),
-                  // Upload document
-                  InkWell(
-                    onTap: _pickDocument,
-                    borderRadius: BorderRadius.circular(12),
-                    child: Container(
-                      width: double.infinity,
-                      padding: EdgeInsets.all(4.w),
+              // Step 3: Terms
+              Step(
+                title: Text('Terms & Payout',
+                    style: TextStyle(fontWeight: FontWeight.w600)),
+                subtitle: Text('Agree to seller terms'),
+                isActive: _currentStep >= 2,
+                content: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      padding: EdgeInsets.all(3.w),
                       decoration: BoxDecoration(
-                        border: Border.all(
-                            color: AppTheme.dividerLight, width: 1.5),
+                        gradient: LinearGradient(
+                          colors: [
+                            AppTheme.primaryLight.withValues(alpha: 0.06),
+                            AppTheme.primaryLight.withValues(alpha: 0.02)
+                          ],
+                        ),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: _kycDocument != null
-                          ? Column(
-                              children: [
-                                ClipRRect(
-                                  borderRadius: BorderRadius.circular(8),
-                                  child: Image.file(_kycDocument!,
-                                      height: 15.h,
-                                      width: double.infinity,
-                                      fit: BoxFit.cover),
-                                ),
-                                SizedBox(height: 1.h),
-                                Text('Tap to change image',
-                                    style: TextStyle(
-                                        color: AppTheme.primaryLight,
-                                        fontWeight: FontWeight.w600,
-                                        fontSize: 10.sp)),
-                              ],
-                            )
-                          : Column(
-                              children: [
-                                Icon(Icons.cloud_upload_outlined,
-                                    size: 40,
-                                    color: AppTheme.primaryLight
-                                        .withValues(alpha: 0.5)),
-                                SizedBox(height: 1.h),
-                                Text('Upload Document Photo',
-                                    style: TextStyle(
-                                        fontWeight: FontWeight.w600,
-                                        fontSize: 12.sp)),
-                                Text('JPG, PNG up to 5MB',
-                                    style: TextStyle(
-                                        color: AppTheme.textSecondaryLight,
-                                        fontSize: 10.sp)),
-                              ],
-                            ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            // Step 3: Terms
-            Step(
-              title: Text('Terms & Payout',
-                  style: TextStyle(fontWeight: FontWeight.w600)),
-              subtitle: Text('Agree to seller terms'),
-              isActive: _currentStep >= 2,
-              content: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    padding: EdgeInsets.all(3.w),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          AppTheme.primaryLight.withValues(alpha: 0.06),
-                          AppTheme.primaryLight.withValues(alpha: 0.02)
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Seller Levels',
+                              style: TextStyle(
+                                  fontWeight: FontWeight.w700, fontSize: 14.0)),
+                          SizedBox(height: 1.h),
+                          _levelRow('🆕', 'New Seller',
+                              'Limited to 5 listings, max KSh 50k/sale'),
+                          _levelRow('✅', 'Verified Seller',
+                              'Normal selling, priority support'),
+                          _levelRow('⭐', 'Trusted Seller',
+                              'Higher limits, featured visibility'),
                         ],
                       ),
-                      borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Seller Levels',
-                            style: TextStyle(
-                                fontWeight: FontWeight.w700, fontSize: 12.sp)),
-                        SizedBox(height: 1.h),
-                        _levelRow('🆕', 'New Seller',
-                            'Limited to 5 listings, max KSh 50k/sale'),
-                        _levelRow('✅', 'Verified Seller',
-                            'Normal selling, priority support'),
-                        _levelRow('⭐', 'Trusted Seller',
-                            'Higher limits, featured visibility'),
-                      ],
-                    ),
-                  ),
-                  SizedBox(height: 2.h),
-                  Container(
-                    padding: EdgeInsets.all(3.w),
-                    decoration: BoxDecoration(
-                      color: AppTheme.warningLight.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(Icons.info_outline,
-                            color: AppTheme.warningLight, size: 20),
-                        SizedBox(width: 2.w),
-                        Expanded(
-                          child: Text(
-                            'PromoHub charges 6-15% commission per sale depending on category. You\'ll start as a New Seller.',
-                            style: TextStyle(
-                                fontSize: 10.sp,
-                                color: AppTheme.textSecondaryLight),
+                    SizedBox(height: 2.h),
+                    Container(
+                      padding: EdgeInsets.all(3.w),
+                      decoration: BoxDecoration(
+                        color: AppTheme.warningLight.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.info_outline,
+                              color: AppTheme.warningLight, size: 20),
+                          SizedBox(width: 2.w),
+                          Expanded(
+                            child: Text(
+                              'PromoHub charges 6-15% commission per sale depending on category. You\'ll start as a New Seller.',
+                              style: TextStyle(
+                                  fontSize: 12.0,
+                                  color: AppTheme.textSecondaryLight),
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                  SizedBox(height: 2.h),
-                  CheckboxListTile(
-                    value: _agreedToTerms,
-                    onChanged: (v) =>
-                        setState(() => _agreedToTerms = v ?? false),
-                    title: Text('I agree to the Seller Terms & Conditions',
-                        style: TextStyle(fontSize: 11.sp)),
-                    controlAffinity: ListTileControlAffinity.leading,
-                    contentPadding: EdgeInsets.zero,
-                    activeColor: AppTheme.primaryLight,
-                  ),
-                ],
+                    SizedBox(height: 2.h),
+                    CheckboxListTile(
+                      value: _agreedToTerms,
+                      onChanged: (v) =>
+                          setState(() => _agreedToTerms = v ?? false),
+                      title: Text('I agree to the Seller Terms & Conditions',
+                          style: TextStyle(fontSize: 13.0)),
+                      controlAffinity: ListTileControlAffinity.leading,
+                      contentPadding: EdgeInsets.zero,
+                      activeColor: AppTheme.primaryLight,
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+            physics: const ClampingScrollPhysics(),
+          ),
         ),
       ),
     );
@@ -544,15 +563,15 @@ class _SellerRegistrationScreenState extends State<SellerRegistrationScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(emoji, style: TextStyle(fontSize: 14.sp)),
+          Text(emoji, style: TextStyle(fontSize: 16.0)),
           SizedBox(width: 2.w),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(title,
-                    style: TextStyle(
-                        fontWeight: FontWeight.w600, fontSize: 11.sp)),
+                    style:
+                        TextStyle(fontWeight: FontWeight.w600, fontSize: 13.0)),
                 Text(desc,
                     style: TextStyle(
                         fontSize: 9.sp, color: AppTheme.textSecondaryLight)),

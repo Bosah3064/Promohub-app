@@ -14,10 +14,10 @@ class CartScreen extends StatefulWidget {
   State<CartScreen> createState() => _CartScreenState();
 }
 
-class _CartScreenState extends State<CartScreen> with SingleTickerProviderStateMixin {
+class _CartScreenState extends State<CartScreen>
+    with SingleTickerProviderStateMixin {
   final MarketplaceService _marketplaceService = MarketplaceService();
   List<Map<String, dynamic>> _cartItems = [];
-  bool _isLoading = true;
   late AnimationController _fadeController;
   late Animation<double> _fadeAnimation;
 
@@ -28,32 +28,15 @@ class _CartScreenState extends State<CartScreen> with SingleTickerProviderStateM
       duration: const Duration(milliseconds: 600),
       vsync: this,
     );
-    _fadeAnimation = CurvedAnimation(parent: _fadeController, curve: Curves.easeOut);
-    _loadCart();
+    _fadeAnimation =
+        CurvedAnimation(parent: _fadeController, curve: Curves.easeOut);
+    _fadeController.forward();
   }
 
   @override
   void dispose() {
     _fadeController.dispose();
     super.dispose();
-  }
-
-  Future<void> _loadCart() async {
-    try {
-      final items = await _marketplaceService.getCart();
-      if (mounted) {
-        setState(() {
-          _cartItems = items;
-          _isLoading = false;
-        });
-        _fadeController.forward();
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() => _isLoading = false);
-        _fadeController.forward();
-      }
-    }
   }
 
   double get _subtotal {
@@ -103,18 +86,25 @@ class _CartScreenState extends State<CartScreen> with SingleTickerProviderStateM
                   Fluttertoast.showToast(msg: 'Error clearing cart');
                 }
               },
-              child: Text('Clear All', style: TextStyle(color: AppTheme.secondaryLight)),
+              child: Text('Clear All',
+                  style: TextStyle(color: AppTheme.secondaryLight)),
             ),
         ],
       ),
-      body: _isLoading
-          ? _buildLoadingSkeleton()
-          : _cartItems.isEmpty
+      body: StreamBuilder<List<Map<String, dynamic>>>(
+        stream: _marketplaceService.watchCart(),
+        builder: (context, snapshot) {
+          if (snapshot.hasError) return _buildEmptyCart();
+          if (!snapshot.hasData) return _buildLoadingSkeleton();
+          _cartItems = snapshot.data!;
+          return _cartItems.isEmpty
               ? _buildEmptyCart()
               : FadeTransition(
                   opacity: _fadeAnimation,
                   child: _buildCartContent(),
-                ),
+                );
+        },
+      ),
     );
   }
 
@@ -182,7 +172,8 @@ class _CartScreenState extends State<CartScreen> with SingleTickerProviderStateM
             label: const Text('Explore Marketplace'),
             style: ElevatedButton.styleFrom(
               padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14)),
             ),
           ),
         ],
@@ -209,13 +200,16 @@ class _CartScreenState extends State<CartScreen> with SingleTickerProviderStateM
 
   Widget _buildCartItem(Map<String, dynamic> item, int index) {
     final listing = item['listing_id'];
-    final String title = listing is Map ? (listing['title'] ?? 'Product') : 'Product';
-    final double price = listing is Map ? (listing['price']?.toDouble() ?? 0) : 0;
+    final String title =
+        listing is Map ? (listing['title'] ?? 'Product') : 'Product';
+    final double price =
+        listing is Map ? (listing['price']?.toDouble() ?? 0) : 0;
     final int quantity = item['quantity'] ?? 1;
     final shop = listing is Map ? listing['shop_id'] : null;
     final String shopName = shop is Map ? (shop['name'] ?? '') : '';
     final images = listing is Map ? (listing['images'] as List?) : null;
-    final String? imageUrl = images != null && images.isNotEmpty ? images.first : null;
+    final String? imageUrl =
+        images != null && images.isNotEmpty ? images.first : null;
 
     return Dismissible(
       key: Key(item['id'] ?? 'cart_$index'),
@@ -226,7 +220,10 @@ class _CartScreenState extends State<CartScreen> with SingleTickerProviderStateM
         padding: EdgeInsets.only(right: 5.w),
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [AppTheme.errorLight.withValues(alpha: 0.7), AppTheme.errorLight],
+            colors: [
+              AppTheme.errorLight.withValues(alpha: 0.7),
+              AppTheme.errorLight
+            ],
           ),
           borderRadius: BorderRadius.circular(16),
         ),
@@ -264,7 +261,8 @@ class _CartScreenState extends State<CartScreen> with SingleTickerProviderStateM
                     : null,
               ),
               child: imageUrl == null
-                  ? Icon(Icons.image_outlined, color: AppTheme.textDisabledLight, size: 30)
+                  ? Icon(Icons.image_outlined,
+                      color: AppTheme.textDisabledLight, size: 30)
                   : null,
             ),
             SizedBox(width: 3.w),
@@ -298,7 +296,7 @@ class _CartScreenState extends State<CartScreen> with SingleTickerProviderStateM
                       Text(
                         'KSh ${price.toStringAsFixed(0)}',
                         style: TextStyle(
-                          fontSize: 13.sp,
+                          fontSize: 15.0,
                           fontWeight: FontWeight.w800,
                           color: AppTheme.primaryLight,
                         ),
@@ -312,30 +310,38 @@ class _CartScreenState extends State<CartScreen> with SingleTickerProviderStateM
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                        _quantityButton(Icons.remove, () async {
-                          final newQty = quantity - 1;
-                          try {
-                            await _marketplaceService.updateCartQuantity(item['id'], newQty);
-                            if (newQty <= 0) {
-                              setState(() => _cartItems.removeAt(_cartItems.indexOf(item)));
-                            } else {
-                              setState(() => item['quantity'] = newQty);
-                            }
-                          } catch (e) {
-                            Fluttertoast.showToast(msg: 'Error updating quantity');
-                          }
-                        }),
+                            _quantityButton(Icons.remove, () async {
+                              final newQty = quantity - 1;
+                              try {
+                                await _marketplaceService.updateCartQuantity(
+                                    item['id'], newQty);
+                                if (newQty <= 0) {
+                                  setState(() => _cartItems
+                                      .removeAt(_cartItems.indexOf(item)));
+                                } else {
+                                  setState(() => item['quantity'] = newQty);
+                                }
+                              } catch (e) {
+                                Fluttertoast.showToast(
+                                    msg: 'Error updating quantity');
+                              }
+                            }),
                             Padding(
                               padding: EdgeInsets.symmetric(horizontal: 3.w),
-                              child: Text('$quantity', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12.sp)),
+                              child: Text('$quantity',
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 14.0)),
                             ),
                             _quantityButton(Icons.add, () async {
                               final newQty = quantity + 1;
                               try {
-                                await _marketplaceService.updateCartQuantity(item['id'], newQty);
+                                await _marketplaceService.updateCartQuantity(
+                                    item['id'], newQty);
                                 setState(() => item['quantity'] = newQty);
                               } catch (e) {
-                                Fluttertoast.showToast(msg: 'Error updating quantity');
+                                Fluttertoast.showToast(
+                                    msg: 'Error updating quantity');
                               }
                             }),
                           ],
@@ -405,7 +411,8 @@ class _CartScreenState extends State<CartScreen> with SingleTickerProviderStateM
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppTheme.primaryLight,
                 foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14)),
                 elevation: 0,
               ),
               child: Row(
@@ -415,7 +422,8 @@ class _CartScreenState extends State<CartScreen> with SingleTickerProviderStateM
                   SizedBox(width: 2.w),
                   Text(
                     'Proceed to Checkout',
-                    style: TextStyle(fontSize: 13.sp, fontWeight: FontWeight.w700),
+                    style:
+                        TextStyle(fontSize: 15.0, fontWeight: FontWeight.w700),
                   ),
                 ],
               ),
@@ -433,15 +441,17 @@ class _CartScreenState extends State<CartScreen> with SingleTickerProviderStateM
         Text(
           label,
           style: TextStyle(
-            fontSize: isBold ? 13.sp : 11.sp,
+            fontSize: isBold ? 15.0 : 13.0,
             fontWeight: isBold ? FontWeight.w800 : FontWeight.w400,
-            color: isBold ? AppTheme.textPrimaryLight : AppTheme.textSecondaryLight,
+            color: isBold
+                ? AppTheme.textPrimaryLight
+                : AppTheme.textSecondaryLight,
           ),
         ),
         Text(
           value,
           style: TextStyle(
-            fontSize: isBold ? 14.sp : 11.sp,
+            fontSize: isBold ? 16.0 : 13.0,
             fontWeight: isBold ? FontWeight.w800 : FontWeight.w500,
             color: isBold ? AppTheme.primaryLight : AppTheme.textPrimaryLight,
           ),

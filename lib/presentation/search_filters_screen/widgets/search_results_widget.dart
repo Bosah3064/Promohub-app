@@ -71,7 +71,7 @@ class _SearchResultsWidgetState extends State<SearchResultsWidget> {
       children: [
         // Results Header
         Container(
-          padding: EdgeInsets.all(16.sp),
+          padding: EdgeInsets.all(18.0),
           decoration: BoxDecoration(
             color: AppTheme.lightTheme.colorScheme.surface,
             border: Border(
@@ -103,7 +103,7 @@ class _SearchResultsWidgetState extends State<SearchResultsWidget> {
                   CustomIconWidget(
                     iconName: 'keyboard_arrow_down',
                     color: AppTheme.lightTheme.colorScheme.primary,
-                    size: 16.sp,
+                    size: 18.0,
                   ),
                 ],
               ),
@@ -115,7 +115,7 @@ class _SearchResultsWidgetState extends State<SearchResultsWidget> {
         Expanded(
           child: ListView.builder(
             controller: _scrollController,
-            padding: EdgeInsets.all(16.sp),
+            padding: EdgeInsets.all(18.0),
             itemCount: widget.searchResults.length + (_isLoadingMore ? 2 : 0),
             itemBuilder: (context, index) {
               if (index >= widget.searchResults.length) {
@@ -133,10 +133,10 @@ class _SearchResultsWidgetState extends State<SearchResultsWidget> {
 
   Widget _buildResultCard(Map<String, dynamic> item, int index) {
     return Container(
-      margin: EdgeInsets.only(bottom: 16.sp),
+      margin: EdgeInsets.only(bottom: 18.0),
       decoration: BoxDecoration(
         color: AppTheme.lightTheme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(12.sp),
+        borderRadius: BorderRadius.circular(14.0),
         boxShadow: [
           BoxShadow(
             color: AppTheme.lightTheme.colorScheme.shadow,
@@ -147,7 +147,7 @@ class _SearchResultsWidgetState extends State<SearchResultsWidget> {
       ),
       child: InkWell(
         onTap: () => widget.onItemTap(item),
-        borderRadius: BorderRadius.circular(12.sp),
+        borderRadius: BorderRadius.circular(14.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -156,7 +156,7 @@ class _SearchResultsWidgetState extends State<SearchResultsWidget> {
               children: [
                 ClipRRect(
                   borderRadius: BorderRadius.vertical(
-                    top: Radius.circular(12.sp),
+                    top: Radius.circular(14.0),
                   ),
                   child: CustomImageWidget(
                     imageUrl: item['image'] as String,
@@ -166,12 +166,12 @@ class _SearchResultsWidgetState extends State<SearchResultsWidget> {
                   ),
                 ),
                 Positioned(
-                  top: 12.sp,
-                  right: 12.sp,
+                  top: 14.0,
+                  right: 14.0,
                   child: GestureDetector(
                     onTap: () => widget.onFavoriteToggle(index),
                     child: Container(
-                      padding: EdgeInsets.all(8.sp),
+                      padding: EdgeInsets.all(10.0),
                       decoration: BoxDecoration(
                         color: AppTheme.lightTheme.colorScheme.surface
                             .withValues(alpha: 0.9),
@@ -184,24 +184,24 @@ class _SearchResultsWidgetState extends State<SearchResultsWidget> {
                         color: (item['isFavorite'] as bool)
                             ? AppTheme.lightTheme.colorScheme.error
                             : AppTheme.lightTheme.colorScheme.onSurfaceVariant,
-                        size: 20.sp,
+                        size: 22.0,
                       ),
                     ),
                   ),
                 ),
                 Positioned(
-                  top: 12.sp,
-                  left: 12.sp,
+                  top: 14.0,
+                  left: 14.0,
                   child: Container(
                     padding: EdgeInsets.symmetric(
-                      horizontal: 8.sp,
+                      horizontal: 10.0,
                       vertical: 4.sp,
                     ),
                     decoration: BoxDecoration(
                       color: (item['condition'] as String) == 'New'
                           ? AppTheme.lightTheme.colorScheme.secondaryContainer
                           : AppTheme.lightTheme.colorScheme.tertiaryContainer,
-                      borderRadius: BorderRadius.circular(12.sp),
+                      borderRadius: BorderRadius.circular(14.0),
                     ),
                     child: Text(
                       item['condition'] as String,
@@ -217,7 +217,7 @@ class _SearchResultsWidgetState extends State<SearchResultsWidget> {
 
             // Content Section
             Padding(
-              padding: EdgeInsets.all(16.sp),
+              padding: EdgeInsets.all(18.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -227,7 +227,7 @@ class _SearchResultsWidgetState extends State<SearchResultsWidget> {
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  SizedBox(height: 8.sp),
+                  SizedBox(height: 10.0),
                   Text(
                     item['price'] as String,
                     style: AppTheme.lightTheme.textTheme.titleLarge?.copyWith(
@@ -235,13 +235,13 @@ class _SearchResultsWidgetState extends State<SearchResultsWidget> {
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                  SizedBox(height: 8.sp),
+                  SizedBox(height: 10.0),
                   Row(
                     children: [
                       CustomIconWidget(
                         iconName: 'location_on',
                         color: AppTheme.lightTheme.colorScheme.onSurfaceVariant,
-                        size: 16.sp,
+                        size: 18.0,
                       ),
                       SizedBox(width: 4.sp),
                       Expanded(
@@ -260,7 +260,7 @@ class _SearchResultsWidgetState extends State<SearchResultsWidget> {
                       ),
                     ],
                   ),
-                  SizedBox(height: 8.sp),
+                  SizedBox(height: 10.0),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -293,10 +293,10 @@ class _SearchResultsWidgetState extends State<SearchResultsWidget> {
 
   Widget _buildSkeletonCard() {
     return Container(
-      margin: EdgeInsets.only(bottom: 16.sp),
+      margin: EdgeInsets.only(bottom: 18.0),
       decoration: BoxDecoration(
         color: AppTheme.lightTheme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(12.sp),
+        borderRadius: BorderRadius.circular(14.0),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -307,38 +307,38 @@ class _SearchResultsWidgetState extends State<SearchResultsWidget> {
             decoration: BoxDecoration(
               color: AppTheme.lightTheme.colorScheme.surfaceContainerHighest,
               borderRadius: BorderRadius.vertical(
-                top: Radius.circular(12.sp),
+                top: Radius.circular(14.0),
               ),
             ),
           ),
           Padding(
-            padding: EdgeInsets.all(16.sp),
+            padding: EdgeInsets.all(18.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
                   width: 80.w,
-                  height: 16.sp,
+                  height: 18.0,
                   decoration: BoxDecoration(
                     color:
                         AppTheme.lightTheme.colorScheme.surfaceContainerHighest,
                     borderRadius: BorderRadius.circular(4.sp),
                   ),
                 ),
-                SizedBox(height: 8.sp),
+                SizedBox(height: 10.0),
                 Container(
                   width: 40.w,
-                  height: 20.sp,
+                  height: 22.0,
                   decoration: BoxDecoration(
                     color:
                         AppTheme.lightTheme.colorScheme.surfaceContainerHighest,
                     borderRadius: BorderRadius.circular(4.sp),
                   ),
                 ),
-                SizedBox(height: 8.sp),
+                SizedBox(height: 10.0),
                 Container(
                   width: 60.w,
-                  height: 14.sp,
+                  height: 16.0,
                   decoration: BoxDecoration(
                     color:
                         AppTheme.lightTheme.colorScheme.surfaceContainerHighest,
@@ -356,7 +356,7 @@ class _SearchResultsWidgetState extends State<SearchResultsWidget> {
   Widget _buildEmptyState() {
     return Center(
       child: Padding(
-        padding: EdgeInsets.all(32.sp),
+        padding: EdgeInsets.all(34.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -365,14 +365,14 @@ class _SearchResultsWidgetState extends State<SearchResultsWidget> {
               color: AppTheme.lightTheme.colorScheme.onSurfaceVariant,
               size: 64.sp,
             ),
-            SizedBox(height: 24.sp),
+            SizedBox(height: 28.0),
             Text(
               'No results found',
               style: AppTheme.lightTheme.textTheme.headlineSmall?.copyWith(
                 color: AppTheme.lightTheme.colorScheme.onSurfaceVariant,
               ),
             ),
-            SizedBox(height: 12.sp),
+            SizedBox(height: 14.0),
             Text(
               'Try adjusting your search or filters to find what you\'re looking for.',
               style: AppTheme.lightTheme.textTheme.bodyMedium?.copyWith(
@@ -380,7 +380,7 @@ class _SearchResultsWidgetState extends State<SearchResultsWidget> {
               ),
               textAlign: TextAlign.center,
             ),
-            SizedBox(height: 24.sp),
+            SizedBox(height: 28.0),
             ElevatedButton.icon(
               onPressed: () {
                 // Save search functionality
@@ -388,7 +388,7 @@ class _SearchResultsWidgetState extends State<SearchResultsWidget> {
               icon: CustomIconWidget(
                 iconName: 'notifications',
                 color: AppTheme.lightTheme.colorScheme.onPrimary,
-                size: 20.sp,
+                size: 22.0,
               ),
               label: Text('Save Search'),
             ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:sizer/sizer.dart';
 
 import '../../core/app_export.dart';
@@ -9,6 +10,8 @@ import './widgets/chat_input_field.dart';
 import './widgets/conversation_list_item.dart';
 import './widgets/message_bubble.dart';
 import './widgets/message_options_sheet.dart';
+import '../../services/firebase_service.dart';
+import '../../services/marketplace_service.dart';
 
 class MessagesAndChat extends StatefulWidget {
   const MessagesAndChat({super.key});
@@ -22,17 +25,12 @@ class _MessagesAndChatState extends State<MessagesAndChat>
   late TabController _tabController;
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _chatScrollController = ScrollController();
+  final MarketplaceService _marketplaceService = MarketplaceService();
+  final FirebaseService _firebaseService = FirebaseService();
 
   bool _isRecording = false;
   final bool _isTyping = false;
   Map<String, dynamic>? _selectedConversation;
-  Map<String, dynamic>? _selectedMessage;
-
-  // Mock data for conversations (Empty State)
-  final List<Map<String, dynamic>> _conversations = [];
-
-  // Mock data for messages (Empty State)
-  final Map<String, dynamic> _messages = {};
 
   @override
   void initState() {
@@ -48,23 +46,16 @@ class _MessagesAndChatState extends State<MessagesAndChat>
     super.dispose();
   }
 
-  void _openChat(Map<String, dynamic> conversation) {
+  Future<void> _openChat(Map<String, dynamic> conversation) async {
     setState(() {
       _selectedConversation = conversation;
     });
 
-    // Mark messages as read
     final conversationId = conversation['id'] as String;
-    if (_messages.containsKey(conversationId)) {
-      for (var message in _messages[conversationId]!) {
-        if (message['senderId'] != 'current_user') {
-          message['status'] = 'read';
-        }
-      }
-    }
-
-    // Update conversation unread count
-    conversation['unreadCount'] = 0;
+    await _firebaseService.firestore
+        .collection('conversations')
+        .doc(conversationId)
+        .update({'unread_count': 0});
 
     // Scroll to bottom
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -78,38 +69,34 @@ class _MessagesAndChatState extends State<MessagesAndChat>
     });
   }
 
-  void _sendMessage() {
+  Future<void> _sendMessage() async {
     if (_messageController.text.trim().isEmpty ||
         _selectedConversation == null) {
       return;
     }
 
     final conversationId = _selectedConversation!['id'] as String;
-    final newMessage = {
-      'id': 'm${DateTime.now().millisecondsSinceEpoch}',
+    final content = _messageController.text.trim();
+    final userId = _firebaseService.currentUserId;
+    if (userId == null) return;
+    final conversationReference = _firebaseService.firestore
+        .collection('conversations')
+        .doc(conversationId);
+    await conversationReference.collection('messages').add({
       'type': 'text',
-      'content': _messageController.text.trim(),
-      'timestamp': DateTime.now(),
-      'senderId': 'current_user',
-      'senderAvatar':
-          'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&h=150&fit=crop&crop=face',
-      'status': 'sent',
-    };
-
-    setState(() {
-      if (!_messages.containsKey(conversationId)) {
-        _messages[conversationId] = [];
-      }
-      _messages[conversationId]!.add(newMessage);
-
-      // Update conversation last message
-      _selectedConversation!['lastMessage'] = _messageController.text.trim();
-      _selectedConversation!['lastMessageTime'] = DateTime.now();
-      _selectedConversation!['isLastMessageSent'] = true;
-      _selectedConversation!['messageStatus'] = 'sent';
-
-      _messageController.clear();
+      'content': content,
+      'sender_id': userId,
+      'created_at': FieldValue.serverTimestamp(),
+      'status': 'sent'
     });
+    await conversationReference.update({
+      'last_message': content,
+      'last_message_sender_id': userId,
+      'last_message_at': FieldValue.serverTimestamp(),
+      'last_message_status': 'sent',
+      'updated_at': FieldValue.serverTimestamp()
+    });
+    _messageController.clear();
 
     // Scroll to bottom
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -119,25 +106,6 @@ class _MessagesAndChatState extends State<MessagesAndChat>
           duration: Duration(milliseconds: 300),
           curve: Curves.easeOut,
         );
-      }
-    });
-
-    // Simulate message status updates
-    Future.delayed(Duration(seconds: 1), () {
-      if (mounted) {
-        setState(() {
-          newMessage['status'] = 'delivered';
-          _selectedConversation!['messageStatus'] = 'delivered';
-        });
-      }
-    });
-
-    Future.delayed(Duration(seconds: 3), () {
-      if (mounted) {
-        setState(() {
-          newMessage['status'] = 'read';
-          _selectedConversation!['messageStatus'] = 'read';
-        });
       }
     });
   }
@@ -328,17 +296,13 @@ class _MessagesAndChatState extends State<MessagesAndChat>
   }
 
   void _handleMessageLongPress(Map<String, dynamic> message) {
-    setState(() {
-      _selectedMessage = message;
-    });
-
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       builder: (context) => MessageOptionsSheet(
         message: message,
-        isCurrentUser: message['senderId'] == 'current_user',
+        isCurrentUser: message['senderId'] == _firebaseService.currentUserId,
         onCopy: () => _copyMessage(message),
         onDelete: () => _deleteMessage(message),
         onReport: () => _reportMessage(message),
@@ -354,11 +318,14 @@ class _MessagesAndChatState extends State<MessagesAndChat>
     }
   }
 
-  void _deleteMessage(Map<String, dynamic> message) {
+  Future<void> _deleteMessage(Map<String, dynamic> message) async {
     final conversationId = _selectedConversation!['id'] as String;
-    setState(() {
-      _messages[conversationId]?.removeWhere((m) => m['id'] == message['id']);
-    });
+    await _firebaseService.firestore
+        .collection('conversations')
+        .doc(conversationId)
+        .collection('messages')
+        .doc(message['id'] as String)
+        .delete();
     _showToast('Message deleted');
   }
 
@@ -423,14 +390,23 @@ class _MessagesAndChatState extends State<MessagesAndChat>
           ],
         ),
       ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          _buildConversationsList(_conversations),
-          _buildConversationsList(_conversations
-              .where((c) => (c['unreadCount'] as int) > 0)
-              .toList()),
-        ],
+      body: StreamBuilder<List<Map<String, dynamic>>>(
+        stream: _marketplaceService.watchConversations(),
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          final conversations = snapshot.data!;
+          return TabBarView(
+            controller: _tabController,
+            children: [
+              _buildConversationsList(conversations),
+              _buildConversationsList(conversations
+                  .where((c) => (c['unreadCount'] as int) > 0)
+                  .toList()),
+            ],
+          );
+        },
       ),
     );
   }
@@ -480,102 +456,107 @@ class _MessagesAndChatState extends State<MessagesAndChat>
 
   Widget _buildChatScreen() {
     final conversationId = _selectedConversation!['id'] as String;
-    final messages = _messages[conversationId] ?? [];
-
-    return Scaffold(
-      backgroundColor: AppTheme.lightTheme.scaffoldBackgroundColor,
-      appBar: ChatHeader(
-        contact: _selectedConversation!,
-        onBackPressed: () {
-          setState(() {
-            _selectedConversation = null;
-          });
-        },
-        onCallPressed: _handleCall,
-        onVideoCallPressed: _handleVideoCall,
-        onMorePressed: _handleMoreOptions,
-        isTyping: _isTyping,
-      ),
-      body: Column(
-        children: [
-          // Safety reminder
-          Container(
-            width: double.infinity,
-            padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 1.h),
-            color: AppTheme.warningLight.withValues(alpha: 0.1),
-            child: Row(
-              children: [
-                CustomIconWidget(
-                  iconName: 'security',
-                  size: 16,
-                  color: AppTheme.warningLight,
-                ),
-                SizedBox(width: 2.w),
-                Expanded(
-                  child: Text(
-                    'For your safety, meet in public places for transactions',
-                    style: AppTheme.lightTheme.textTheme.labelSmall?.copyWith(
+    return StreamBuilder<List<Map<String, dynamic>>>(
+      stream: _marketplaceService.watchMessages(conversationId),
+      builder: (context, snapshot) {
+        final messages = snapshot.data ?? <Map<String, dynamic>>[];
+        return Scaffold(
+          backgroundColor: AppTheme.lightTheme.scaffoldBackgroundColor,
+          appBar: ChatHeader(
+            contact: _selectedConversation!,
+            onBackPressed: () {
+              setState(() {
+                _selectedConversation = null;
+              });
+            },
+            onCallPressed: _handleCall,
+            onVideoCallPressed: _handleVideoCall,
+            onMorePressed: _handleMoreOptions,
+            isTyping: _isTyping,
+          ),
+          body: Column(
+            children: [
+              // Safety reminder
+              Container(
+                width: double.infinity,
+                padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 1.h),
+                color: AppTheme.warningLight.withValues(alpha: 0.1),
+                child: Row(
+                  children: [
+                    CustomIconWidget(
+                      iconName: 'security',
+                      size: 16,
                       color: AppTheme.warningLight,
                     ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Messages list
-          Expanded(
-            child: messages.isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        CustomIconWidget(
-                          iconName: 'chat',
-                          size: 48,
-                          color:
-                              AppTheme.lightTheme.colorScheme.onSurfaceVariant,
+                    SizedBox(width: 2.w),
+                    Expanded(
+                      child: Text(
+                        'For your safety, meet in public places for transactions',
+                        style:
+                            AppTheme.lightTheme.textTheme.labelSmall?.copyWith(
+                          color: AppTheme.warningLight,
                         ),
-                        SizedBox(height: 2.h),
-                        Text(
-                          'Start your conversation',
-                          style: AppTheme.lightTheme.textTheme.titleMedium
-                              ?.copyWith(
-                            color: AppTheme
-                                .lightTheme.colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
-                  )
-                : ListView.builder(
-                    controller: _chatScrollController,
-                    itemCount: messages.length,
-                    itemBuilder: (context, index) {
-                      final message = messages[index];
-                      final isCurrentUser =
-                          message['senderId'] == 'current_user';
+                  ],
+                ),
+              ),
 
-                      return MessageBubble(
-                        message: message,
-                        isCurrentUser: isCurrentUser,
-                        onLongPress: () => _handleMessageLongPress(message),
-                      );
-                    },
-                  ),
-          ),
+              // Messages list
+              Expanded(
+                child: messages.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            CustomIconWidget(
+                              iconName: 'chat',
+                              size: 48,
+                              color: AppTheme
+                                  .lightTheme.colorScheme.onSurfaceVariant,
+                            ),
+                            SizedBox(height: 2.h),
+                            Text(
+                              'Start your conversation',
+                              style: AppTheme.lightTheme.textTheme.titleMedium
+                                  ?.copyWith(
+                                color: AppTheme
+                                    .lightTheme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    : ListView.builder(
+                        controller: _chatScrollController,
+                        itemCount: messages.length,
+                        itemBuilder: (context, index) {
+                          final message = messages[index];
+                          final isCurrentUser = message['senderId'] ==
+                              _firebaseService.currentUserId;
 
-          // Input field
-          ChatInputField(
-            controller: _messageController,
-            onSendMessage: _sendMessage,
-            onAttachFile: _handleAttachFile,
-            onRecordVoice: _handleRecordVoice,
-            onEmojiTap: _handleEmojiTap,
-            isRecording: _isRecording,
+                          return MessageBubble(
+                            message: message,
+                            isCurrentUser: isCurrentUser,
+                            onLongPress: () => _handleMessageLongPress(message),
+                          );
+                        },
+                      ),
+              ),
+
+              // Input field
+              ChatInputField(
+                controller: _messageController,
+                onSendMessage: _sendMessage,
+                onAttachFile: _handleAttachFile,
+                onRecordVoice: _handleRecordVoice,
+                onEmojiTap: _handleEmojiTap,
+                isRecording: _isRecording,
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

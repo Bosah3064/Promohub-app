@@ -52,7 +52,7 @@ class SortBottomSheetWidget extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppTheme.lightTheme.colorScheme.surface,
         borderRadius: BorderRadius.vertical(
-          top: Radius.circular(20.sp),
+          top: Radius.circular(22.0),
         ),
       ),
       child: Column(
@@ -60,7 +60,7 @@ class SortBottomSheetWidget extends StatelessWidget {
         children: [
           // Handle
           Container(
-            margin: EdgeInsets.only(top: 12.sp),
+            margin: EdgeInsets.only(top: 14.0),
             width: 40.sp,
             height: 4.sp,
             decoration: BoxDecoration(
@@ -72,7 +72,7 @@ class SortBottomSheetWidget extends StatelessWidget {
 
           // Header
           Padding(
-            padding: EdgeInsets.all(20.sp),
+            padding: EdgeInsets.all(22.0),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -87,7 +87,7 @@ class SortBottomSheetWidget extends StatelessWidget {
                   icon: CustomIconWidget(
                     iconName: 'close',
                     color: AppTheme.lightTheme.colorScheme.onSurfaceVariant,
-                    size: 24.sp,
+                    size: 28.0,
                   ),
                 ),
               ],
@@ -98,7 +98,7 @@ class SortBottomSheetWidget extends StatelessWidget {
           Flexible(
             child: ListView.separated(
               shrinkWrap: true,
-              padding: EdgeInsets.symmetric(horizontal: 20.sp),
+              padding: EdgeInsets.symmetric(horizontal: 22.0),
               itemCount: _sortOptions.length,
               separatorBuilder: (context, index) => Divider(
                 color: AppTheme.lightTheme.colorScheme.outline
@@ -110,22 +110,22 @@ class SortBottomSheetWidget extends StatelessWidget {
                 final isSelected = selectedSort == option['label'];
 
                 return ListTile(
-                  contentPadding: EdgeInsets.symmetric(vertical: 8.sp),
+                  contentPadding: EdgeInsets.symmetric(vertical: 10.0),
                   leading: Container(
-                    padding: EdgeInsets.all(8.sp),
+                    padding: EdgeInsets.all(10.0),
                     decoration: BoxDecoration(
                       color: isSelected
                           ? AppTheme.lightTheme.colorScheme.primaryContainer
                           : AppTheme
                               .lightTheme.colorScheme.surfaceContainerHighest,
-                      borderRadius: BorderRadius.circular(8.sp),
+                      borderRadius: BorderRadius.circular(10.0),
                     ),
                     child: CustomIconWidget(
                       iconName: option['icon'] as String,
                       color: isSelected
                           ? AppTheme.lightTheme.colorScheme.primary
                           : AppTheme.lightTheme.colorScheme.onSurfaceVariant,
-                      size: 20.sp,
+                      size: 22.0,
                     ),
                   ),
                   title: Text(
@@ -148,7 +148,7 @@ class SortBottomSheetWidget extends StatelessWidget {
                       ? CustomIconWidget(
                           iconName: 'check_circle',
                           color: AppTheme.lightTheme.colorScheme.primary,
-                          size: 24.sp,
+                          size: 28.0,
                         )
                       : null,
                   onTap: () {
@@ -161,7 +161,7 @@ class SortBottomSheetWidget extends StatelessWidget {
           ),
 
           // Bottom Padding
-          SizedBox(height: MediaQuery.of(context).padding.bottom + 20.sp),
+          SizedBox(height: MediaQuery.of(context).padding.bottom + 22.0),
         ],
       ),
     );

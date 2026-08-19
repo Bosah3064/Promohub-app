@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
 
 import '../../../core/app_export.dart';
+import '../../../services/marketplace_service.dart';
 
 class FilterPanelWidget extends StatefulWidget {
   final Function(List<Map<String, dynamic>>) onApplyFilters;
@@ -24,8 +25,9 @@ class _FilterPanelWidgetState extends State<FilterPanelWidget> {
   double _locationRadius = 5.0;
   String? _selectedDatePosted;
   String? _selectedSellerType;
+  final MarketplaceService _marketplaceService = MarketplaceService();
 
-  final List<Map<String, dynamic>> _categories = [
+  final List<Map<String, dynamic>> _legacyCategories = [
     {
       'name': 'Vehicles',
       'icon': 'directions_car',
@@ -237,113 +239,121 @@ class _FilterPanelWidgetState extends State<FilterPanelWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: AppTheme.lightTheme.scaffoldBackgroundColor,
-      child: Column(
-        children: [
-          // Header
-          Container(
-            padding: EdgeInsets.all(16.sp),
-            decoration: BoxDecoration(
-              color: AppTheme.lightTheme.colorScheme.surface,
-              boxShadow: [
-                BoxShadow(
-                  color: AppTheme.lightTheme.colorScheme.shadow,
-                  blurRadius: 4,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Filters',
-                  style: AppTheme.lightTheme.textTheme.titleLarge,
-                ),
-                Row(
-                  children: [
-                    TextButton(
-                      onPressed: _clearAllFilters,
-                      child: Text('Clear All'),
-                    ),
-                    IconButton(
-                      onPressed: widget.onClose,
-                      icon: CustomIconWidget(
-                        iconName: 'close',
-                        color: AppTheme.lightTheme.colorScheme.onSurface,
-                        size: 24.sp,
-                      ),
+    return StreamBuilder<List<Map<String, dynamic>>>(
+      stream: _marketplaceService.watchCategories(),
+      builder: (context, snapshot) {
+        final categories = snapshot.hasData && snapshot.data!.isNotEmpty
+            ? snapshot.data!
+            : _legacyCategories;
+        return Container(
+          color: AppTheme.lightTheme.scaffoldBackgroundColor,
+          child: Column(
+            children: [
+              // Header
+              Container(
+                padding: EdgeInsets.all(18.0),
+                decoration: BoxDecoration(
+                  color: AppTheme.lightTheme.colorScheme.surface,
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppTheme.lightTheme.colorScheme.shadow,
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
                     ),
                   ],
                 ),
-              ],
-            ),
-          ),
-
-          // Filter Content
-          Expanded(
-            child: SingleChildScrollView(
-              padding: EdgeInsets.all(16.sp),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildCategoryFilter(),
-                  SizedBox(height: 24.sp),
-                  _buildPriceRangeFilter(),
-                  SizedBox(height: 24.sp),
-                  _buildConditionFilter(),
-                  SizedBox(height: 24.sp),
-                  _buildLocationFilter(),
-                  SizedBox(height: 24.sp),
-                  _buildDatePostedFilter(),
-                  SizedBox(height: 24.sp),
-                  _buildSellerTypeFilter(),
-                  SizedBox(height: 32.sp),
-                ],
-              ),
-            ),
-          ),
-
-          // Apply Button
-          Container(
-            padding: EdgeInsets.all(16.sp),
-            decoration: BoxDecoration(
-              color: AppTheme.lightTheme.colorScheme.surface,
-              boxShadow: [
-                BoxShadow(
-                  color: AppTheme.lightTheme.colorScheme.shadow,
-                  blurRadius: 4,
-                  offset: const Offset(0, -2),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Filters',
+                      style: AppTheme.lightTheme.textTheme.titleLarge,
+                    ),
+                    Row(
+                      children: [
+                        TextButton(
+                          onPressed: _clearAllFilters,
+                          child: Text('Clear All'),
+                        ),
+                        IconButton(
+                          onPressed: widget.onClose,
+                          icon: CustomIconWidget(
+                            iconName: 'close',
+                            color: AppTheme.lightTheme.colorScheme.onSurface,
+                            size: 28.0,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            child: SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _applyFilters,
-                child: Text('Apply Filters'),
               ),
-            ),
+
+              // Filter Content
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.all(18.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildCategoryFilter(categories),
+                      SizedBox(height: 28.0),
+                      _buildPriceRangeFilter(),
+                      SizedBox(height: 28.0),
+                      _buildConditionFilter(),
+                      SizedBox(height: 28.0),
+                      _buildLocationFilter(),
+                      SizedBox(height: 28.0),
+                      _buildDatePostedFilter(),
+                      SizedBox(height: 28.0),
+                      _buildSellerTypeFilter(),
+                      SizedBox(height: 34.0),
+                    ],
+                  ),
+                ),
+              ),
+
+              // Apply Button
+              Container(
+                padding: EdgeInsets.all(18.0),
+                decoration: BoxDecoration(
+                  color: AppTheme.lightTheme.colorScheme.surface,
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppTheme.lightTheme.colorScheme.shadow,
+                      blurRadius: 4,
+                      offset: const Offset(0, -2),
+                    ),
+                  ],
+                ),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: _applyFilters,
+                    child: Text('Apply Filters'),
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
-  Widget _buildCategoryFilter() {
+  Widget _buildCategoryFilter(List<Map<String, dynamic>> categories) {
     return _buildFilterSection(
       title: 'Category',
       child: Column(
-        children: _categories.map((category) {
+        children: categories.map((category) {
           final isSelected = _selectedCategory == category['name'];
           return Container(
-            margin: EdgeInsets.only(bottom: 8.sp),
+            margin: EdgeInsets.only(bottom: 10.0),
             decoration: BoxDecoration(
               color: isSelected
                   ? AppTheme.lightTheme.colorScheme.primaryContainer
                   : AppTheme.lightTheme.colorScheme.surface,
-              borderRadius: BorderRadius.circular(12.sp),
+              borderRadius: BorderRadius.circular(14.0),
               border: Border.all(
                 color: isSelected
                     ? AppTheme.lightTheme.colorScheme.primary
@@ -357,7 +367,7 @@ class _FilterPanelWidgetState extends State<FilterPanelWidget> {
                 color: isSelected
                     ? AppTheme.lightTheme.colorScheme.primary
                     : AppTheme.lightTheme.colorScheme.onSurfaceVariant,
-                size: 24.sp,
+                size: 28.0,
               ),
               title: Text(
                 category['name'] as String,
@@ -372,7 +382,7 @@ class _FilterPanelWidgetState extends State<FilterPanelWidget> {
                 iconName:
                     isSelected ? 'keyboard_arrow_up' : 'keyboard_arrow_down',
                 color: AppTheme.lightTheme.colorScheme.onSurfaceVariant,
-                size: 20.sp,
+                size: 22.0,
               ),
               onTap: () {
                 setState(() {
@@ -409,7 +419,7 @@ class _FilterPanelWidgetState extends State<FilterPanelWidget> {
               ),
             ],
           ),
-          SizedBox(height: 16.sp),
+          SizedBox(height: 18.0),
           RangeSlider(
             values: _priceRange,
             min: 0,
@@ -434,8 +444,8 @@ class _FilterPanelWidgetState extends State<FilterPanelWidget> {
     return _buildFilterSection(
       title: 'Condition',
       child: Wrap(
-        spacing: 8.sp,
-        runSpacing: 8.sp,
+        spacing: 10.0,
+        runSpacing: 10.0,
         children: _conditions.map((condition) {
           final isSelected = _selectedCondition == condition;
           return GestureDetector(
@@ -446,14 +456,14 @@ class _FilterPanelWidgetState extends State<FilterPanelWidget> {
             },
             child: Container(
               padding: EdgeInsets.symmetric(
-                horizontal: 16.sp,
-                vertical: 8.sp,
+                horizontal: 18.0,
+                vertical: 10.0,
               ),
               decoration: BoxDecoration(
                 color: isSelected
                     ? AppTheme.lightTheme.colorScheme.primaryContainer
                     : AppTheme.lightTheme.colorScheme.surface,
-                borderRadius: BorderRadius.circular(20.sp),
+                borderRadius: BorderRadius.circular(22.0),
                 border: Border.all(
                   color: isSelected
                       ? AppTheme.lightTheme.colorScheme.primary
@@ -494,11 +504,11 @@ class _FilterPanelWidgetState extends State<FilterPanelWidget> {
               CustomIconWidget(
                 iconName: 'my_location',
                 color: AppTheme.lightTheme.colorScheme.primary,
-                size: 20.sp,
+                size: 22.0,
               ),
             ],
           ),
-          SizedBox(height: 16.sp),
+          SizedBox(height: 18.0),
           Slider(
             value: _locationRadius,
             min: 1,
@@ -523,7 +533,7 @@ class _FilterPanelWidgetState extends State<FilterPanelWidget> {
         children: _datePostedOptions.map((option) {
           final isSelected = _selectedDatePosted == option;
           return Container(
-            margin: EdgeInsets.only(bottom: 8.sp),
+            margin: EdgeInsets.only(bottom: 10.0),
             child: ListTile(
               title: Text(
                 option,
@@ -568,7 +578,7 @@ class _FilterPanelWidgetState extends State<FilterPanelWidget> {
                 : _sellerTypes[index];
           });
         },
-        borderRadius: BorderRadius.circular(12.sp),
+        borderRadius: BorderRadius.circular(14.0),
         selectedColor: AppTheme.lightTheme.colorScheme.onPrimary,
         fillColor: AppTheme.lightTheme.colorScheme.primary,
         color: AppTheme.lightTheme.colorScheme.onSurfaceVariant,
@@ -578,7 +588,7 @@ class _FilterPanelWidgetState extends State<FilterPanelWidget> {
         ),
         children: _sellerTypes
             .map((type) => Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16.sp),
+                  padding: EdgeInsets.symmetric(horizontal: 18.0),
                   child: Text(type),
                 ))
             .toList(),
@@ -594,7 +604,7 @@ class _FilterPanelWidgetState extends State<FilterPanelWidget> {
       width: double.infinity,
       decoration: BoxDecoration(
         color: AppTheme.lightTheme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(12.sp),
+        borderRadius: BorderRadius.circular(14.0),
         boxShadow: [
           BoxShadow(
             color: AppTheme.lightTheme.colorScheme.shadow,
@@ -604,7 +614,7 @@ class _FilterPanelWidgetState extends State<FilterPanelWidget> {
         ],
       ),
       child: Padding(
-        padding: EdgeInsets.all(16.sp),
+        padding: EdgeInsets.all(18.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -614,7 +624,7 @@ class _FilterPanelWidgetState extends State<FilterPanelWidget> {
                 fontWeight: FontWeight.w600,
               ),
             ),
-            SizedBox(height: 16.sp),
+            SizedBox(height: 18.0),
             child,
           ],
         ),

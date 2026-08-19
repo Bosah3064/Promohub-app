@@ -157,13 +157,13 @@ class _UserSettingsScreenState extends State<UserSettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async {
+    return PopScope(
+      canPop: !_hasUnsavedChanges,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
         if (_hasUnsavedChanges) {
           _showDiscardChangesDialog();
-          return false;
         }
-        return true;
       },
       child: Scaffold(
         backgroundColor: AppTheme.backgroundLight,

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
 
-import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../core/app_export.dart';
 import '../../services/firebase_service.dart';
 import '../../services/marketplace_service.dart';
@@ -136,8 +135,8 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('Order ID', style: TextStyle(color: Colors.white70, fontSize: 11.sp)),
-                              Text(widget.orderId.toUpperCase().substring(0, 8), style: TextStyle(color: Colors.white, fontSize: 16.sp, fontWeight: FontWeight.w800)),
+                              Text('Order ID', style: TextStyle(color: Colors.white70, fontSize: 13.0)),
+                              Text(widget.orderId.toUpperCase().substring(0, 8), style: TextStyle(color: Colors.white, fontSize: 18.0, fontWeight: FontWeight.w800)),
                             ],
                           ),
                         ),
@@ -159,7 +158,7 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
                         ),
                       ),
                       SizedBox(width: 2.w),
-                      Text('Live Tracking Active', style: TextStyle(color: AppTheme.successLight, fontWeight: FontWeight.w600, fontSize: 11.sp)),
+                      Text('Live Tracking Active', style: TextStyle(color: AppTheme.successLight, fontWeight: FontWeight.w600, fontSize: 13.0)),
                     ],
                   ),
                   SizedBox(height: 3.h),
@@ -260,7 +259,7 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
               Text(
                 label,
                 style: TextStyle(
-                  fontSize: 13.sp,
+                  fontSize: 15.0,
                   fontWeight: isCurrent ? FontWeight.w800 : (isCompleted ? FontWeight.w600 : FontWeight.w400),
                   color: isCompleted ? AppTheme.textPrimaryLight : AppTheme.textDisabledLight,
                 ),
@@ -270,7 +269,7 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
                   padding: EdgeInsets.only(top: 0.5.h),
                   child: Text(
                     'Current Status',
-                    style: TextStyle(color: AppTheme.primaryLight, fontSize: 10.sp, fontWeight: FontWeight.w600),
+                    style: TextStyle(color: AppTheme.primaryLight, fontSize: 12.0, fontWeight: FontWeight.w600),
                   ),
                 ),
             ],
@@ -305,7 +304,7 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text('Rate the Seller', style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w800)),
+                Text('Rate the Seller', style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.w800)),
                 SizedBox(height: 1.h),
                 Text('How was your experience?', style: TextStyle(color: AppTheme.textSecondaryLight)),
                 SizedBox(height: 3.h),

@@ -12,7 +12,7 @@
  */
 
 const admin = require('firebase-admin');
-const { getFirestore } = require('firebase-admin/firestore');
+const { getFirestore, FieldValue, Timestamp } = require('firebase-admin/firestore');
 const { getAuth } = require('firebase-admin/auth');
 
 // Initialize Firebase Admin SDK
@@ -89,8 +89,8 @@ async function seedCurrencies() {
     const ref = db.collection('currencies').doc();
     batch.set(ref, {
       ...currency,
-      created_at: admin.firestore.FieldValue.serverTimestamp(),
-      updated_at: admin.firestore.FieldValue.serverTimestamp(),
+      created_at: FieldValue.serverTimestamp(),
+      updated_at: FieldValue.serverTimestamp(),
     });
   }
 
@@ -141,7 +141,7 @@ async function seedLocations() {
       latitude: null,
       longitude: null,
       postal_code: null,
-      created_at: admin.firestore.FieldValue.serverTimestamp(),
+      created_at: FieldValue.serverTimestamp(),
     });
   }
 
@@ -177,7 +177,7 @@ async function seedCategories() {
     batch.set(ref, {
       ...category,
       parent_id: null,
-      created_at: admin.firestore.FieldValue.serverTimestamp(),
+      created_at: FieldValue.serverTimestamp(),
     });
     categoryIds[category.name] = ref.id;
   }
@@ -248,7 +248,7 @@ async function seedSubscriptionTiers() {
     const ref = db.collection('subscription_tiers').doc();
     batch.set(ref, {
       ...tier,
-      created_at: admin.firestore.FieldValue.serverTimestamp(),
+      created_at: FieldValue.serverTimestamp(),
     });
   }
 
@@ -273,7 +273,7 @@ async function seedCategoryCommissions() {
       category_id: categoryDoc.id,
       category_name: categoryData.name,
       commission_rate: categoryData.commission_rate || 8.00,
-      updated_at: admin.firestore.FieldValue.serverTimestamp(),
+      updated_at: FieldValue.serverTimestamp(),
       updated_by: null,
     });
     count++;
@@ -304,7 +304,7 @@ async function seedAchievements() {
     const ref = db.collection('achievements').doc();
     batch.set(ref, {
       ...achievement,
-      created_at: admin.firestore.FieldValue.serverTimestamp(),
+      created_at: FieldValue.serverTimestamp(),
     });
   }
 
@@ -330,7 +330,7 @@ async function seedPickupStations() {
     const ref = db.collection('pickup_stations').doc();
     batch.set(ref, {
       ...station,
-      created_at: admin.firestore.FieldValue.serverTimestamp(),
+      created_at: FieldValue.serverTimestamp(),
     });
   }
 
@@ -397,8 +397,8 @@ async function seedSampleData() {
     total_sales: 0,
     total_purchases: 0,
     verification_status: true,
-    created_at: admin.firestore.FieldValue.serverTimestamp(),
-    updated_at: admin.firestore.FieldValue.serverTimestamp(),
+    created_at: FieldValue.serverTimestamp(),
+    updated_at: FieldValue.serverTimestamp(),
   });
 
   batch.set(db.collection('user_profiles').doc(sellerUser.uid), {
@@ -412,8 +412,8 @@ async function seedSampleData() {
     total_sales: 15,
     total_purchases: 2,
     verification_status: true,
-    created_at: admin.firestore.FieldValue.serverTimestamp(),
-    updated_at: admin.firestore.FieldValue.serverTimestamp(),
+    created_at: FieldValue.serverTimestamp(),
+    updated_at: FieldValue.serverTimestamp(),
   });
 
   batch.set(db.collection('user_profiles').doc(buyerUser.uid), {
@@ -427,8 +427,8 @@ async function seedSampleData() {
     total_sales: 0,
     total_purchases: 5,
     verification_status: false,
-    created_at: admin.firestore.FieldValue.serverTimestamp(),
-    updated_at: admin.firestore.FieldValue.serverTimestamp(),
+    created_at: FieldValue.serverTimestamp(),
+    updated_at: FieldValue.serverTimestamp(),
   });
 
   // Create a sample shop
@@ -448,8 +448,8 @@ async function seedSampleData() {
     completed_orders: 15,
     response_rate: 95.00,
     cancellation_rate: 2.00,
-    created_at: admin.firestore.FieldValue.serverTimestamp(),
-    updated_at: admin.firestore.FieldValue.serverTimestamp(),
+    created_at: FieldValue.serverTimestamp(),
+    updated_at: FieldValue.serverTimestamp(),
   });
 
   await batch.commit();
@@ -491,9 +491,9 @@ async function seedSampleData() {
     is_negotiable: true,
     featured: true,
     inventory_count: 3,
-    created_at: admin.firestore.FieldValue.serverTimestamp(),
-    updated_at: admin.firestore.FieldValue.serverTimestamp(),
-    expires_at: admin.firestore.Timestamp.fromDate(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)),
+    created_at: FieldValue.serverTimestamp(),
+    updated_at: FieldValue.serverTimestamp(),
+    expires_at: Timestamp.fromDate(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)),
   });
 
   const listing2Ref = db.collection('listings').doc();
@@ -521,9 +521,9 @@ async function seedSampleData() {
     is_negotiable: true,
     featured: false,
     inventory_count: 1,
-    created_at: admin.firestore.FieldValue.serverTimestamp(),
-    updated_at: admin.firestore.FieldValue.serverTimestamp(),
-    expires_at: admin.firestore.Timestamp.fromDate(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)),
+    created_at: FieldValue.serverTimestamp(),
+    updated_at: FieldValue.serverTimestamp(),
+    expires_at: Timestamp.fromDate(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)),
   });
 
   const listing3Ref = db.collection('listings').doc();
@@ -550,9 +550,9 @@ async function seedSampleData() {
     is_negotiable: false,
     featured: true,
     inventory_count: 5,
-    created_at: admin.firestore.FieldValue.serverTimestamp(),
-    updated_at: admin.firestore.FieldValue.serverTimestamp(),
-    expires_at: admin.firestore.Timestamp.fromDate(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)),
+    created_at: FieldValue.serverTimestamp(),
+    updated_at: FieldValue.serverTimestamp(),
+    expires_at: Timestamp.fromDate(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)),
   });
 
   // Add a favorite
@@ -560,7 +560,7 @@ async function seedSampleData() {
   listingsBatch.set(favRef, {
     user_id: buyerUser.uid,
     listing_id: listing1Ref.id,
-    created_at: admin.firestore.FieldValue.serverTimestamp(),
+    created_at: FieldValue.serverTimestamp(),
   });
 
   // Create a conversation
@@ -570,8 +570,8 @@ async function seedSampleData() {
     buyer_id: buyerUser.uid,
     seller_id: sellerUser.uid,
     last_message: 'Is this still available?',
-    last_message_at: admin.firestore.FieldValue.serverTimestamp(),
-    created_at: admin.firestore.FieldValue.serverTimestamp(),
+    last_message_at: FieldValue.serverTimestamp(),
+    created_at: FieldValue.serverTimestamp(),
   });
 
   // Create a seller wallet
@@ -585,7 +585,7 @@ async function seedSampleData() {
     total_paid_out: 26500.00,
     total_commission: 3600.00,
     total_refunded: 0.00,
-    updated_at: admin.firestore.FieldValue.serverTimestamp(),
+    updated_at: FieldValue.serverTimestamp(),
   });
 
   await listingsBatch.commit();

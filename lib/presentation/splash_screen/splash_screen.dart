@@ -207,7 +207,7 @@ class _SplashScreenState extends State<SplashScreen> {
                     style: AppTheme.lightTheme.textTheme.bodySmall?.copyWith(
                       color: AppTheme.lightTheme.colorScheme.onSurface
                           .withValues(alpha: 0.6),
-                      fontSize: 11.sp,
+                      fontSize: 13.0,
                     ),
                     textAlign: TextAlign.center,
                   ),

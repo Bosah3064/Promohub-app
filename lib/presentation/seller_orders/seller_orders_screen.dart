@@ -15,20 +15,24 @@ class SellerOrdersScreen extends StatefulWidget {
   State<SellerOrdersScreen> createState() => _SellerOrdersScreenState();
 }
 
-class _SellerOrdersScreenState extends State<SellerOrdersScreen> with SingleTickerProviderStateMixin {
+class _SellerOrdersScreenState extends State<SellerOrdersScreen>
+    with SingleTickerProviderStateMixin {
   final MarketplaceService _marketplaceService = MarketplaceService();
   late TabController _tabController;
-  bool _isLoading = true;
-  List<Map<String, dynamic>> _orders = [];
 
-  final List<String> _tabs = ['All', 'Pending', 'Processing', 'Shipped', 'Delivered'];
+  final List<String> _tabs = [
+    'All',
+    'Pending',
+    'Processing',
+    'Shipped',
+    'Delivered'
+  ];
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: _tabs.length, vsync: this);
     _tabController.addListener(_handleTabSelection);
-    _fetchOrders();
   }
 
   @override
@@ -39,26 +43,7 @@ class _SellerOrdersScreenState extends State<SellerOrdersScreen> with SingleTick
 
   void _handleTabSelection() {
     if (_tabController.indexIsChanging) {
-      _fetchOrders();
-    }
-  }
-
-  Future<void> _fetchOrders() async {
-    setState(() => _isLoading = true);
-    try {
-      final status = _tabController.index == 0 ? 'all' : _tabs[_tabController.index].toLowerCase();
-      final orders = await _marketplaceService.getSellerOrders(widget.shopId, status: status);
-      if (mounted) {
-        setState(() {
-          _orders = orders;
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to load orders: $e')));
-      }
+      setState(() {});
     }
   }
 
@@ -115,8 +100,9 @@ class _SellerOrdersScreenState extends State<SellerOrdersScreen> with SingleTick
     try {
       HapticFeedback.mediumImpact();
       await _marketplaceService.updateOrderStatus(orderId, newStatus);
-      Fluttertoast.showToast(msg: 'Order updated to ${newStatus.replaceAll("_", " ").toUpperCase()}');
-      _fetchOrders();
+      Fluttertoast.showToast(
+          msg:
+              'Order updated to ${newStatus.replaceAll("_", " ").toUpperCase()}');
     } catch (e) {
       Fluttertoast.showToast(msg: 'Failed to update order: $e');
     }
@@ -127,7 +113,8 @@ class _SellerOrdersScreenState extends State<SellerOrdersScreen> with SingleTick
     return Scaffold(
       backgroundColor: AppTheme.backgroundLight,
       appBar: AppBar(
-        title: Text('Manage Orders', style: TextStyle(fontWeight: FontWeight.w700)),
+        title: Text('Manage Orders',
+            style: TextStyle(fontWeight: FontWeight.w700)),
         elevation: 0,
         backgroundColor: Colors.white,
         foregroundColor: AppTheme.textPrimaryLight,
@@ -140,21 +127,32 @@ class _SellerOrdersScreenState extends State<SellerOrdersScreen> with SingleTick
           tabs: _tabs.map((tab) => Tab(text: tab)).toList(),
         ),
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _orders.isEmpty
+      body: StreamBuilder<List<Map<String, dynamic>>>(
+        stream: _marketplaceService.watchSellerOrders(
+          widget.shopId,
+          status: _tabController.index == 0
+              ? 'all'
+              : _tabs[_tabController.index].toLowerCase(),
+        ),
+        builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            return Center(
+                child: Text('Failed to load orders: ${snapshot.error}'));
+          }
+          if (!snapshot.hasData) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          final orders = snapshot.data!;
+          return orders.isEmpty
               ? _buildEmptyState()
-              : RefreshIndicator(
-                  onRefresh: _fetchOrders,
-                  child: ListView.builder(
-                    padding: EdgeInsets.all(4.w),
-                    itemCount: _orders.length,
-                    itemBuilder: (context, index) {
-                      final order = _orders[index];
-                      return _buildOrderCard(order);
-                    },
-                  ),
-                ),
+              : ListView.builder(
+                  padding: EdgeInsets.all(4.w),
+                  itemCount: orders.length,
+                  itemBuilder: (context, index) =>
+                      _buildOrderCard(orders[index]),
+                );
+        },
+      ),
     );
   }
 
@@ -163,11 +161,15 @@ class _SellerOrdersScreenState extends State<SellerOrdersScreen> with SingleTick
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.inventory_2_outlined, size: 80, color: AppTheme.dividerLight),
+          Icon(Icons.inventory_2_outlined,
+              size: 80, color: AppTheme.dividerLight),
           SizedBox(height: 2.h),
           Text(
             'No orders found',
-            style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w700, color: AppTheme.textPrimaryLight),
+            style: TextStyle(
+                fontSize: 18.0,
+                fontWeight: FontWeight.w700,
+                color: AppTheme.textPrimaryLight),
           ),
           SizedBox(height: 1.h),
           Text(
@@ -183,22 +185,22 @@ class _SellerOrdersScreenState extends State<SellerOrdersScreen> with SingleTick
     final buyer = order['buyer'] as Map<String, dynamic>? ?? {};
     final status = order['status'] as String? ?? 'unknown';
     final nextStatus = _getNextStatus(status);
-    
+
     Color statusColor;
-    switch(status) {
+    switch (status) {
       case 'pending_payment':
-      case 'paid': 
-        statusColor = AppTheme.warningLight; 
+      case 'paid':
+        statusColor = AppTheme.warningLight;
         break;
       case 'processing':
-      case 'shipped': 
-        statusColor = AppTheme.secondaryLight; 
+      case 'shipped':
+        statusColor = AppTheme.secondaryLight;
         break;
-      case 'delivered': 
+      case 'delivered':
       case 'completed':
-        statusColor = AppTheme.successLight; 
+        statusColor = AppTheme.successLight;
         break;
-      default: 
+      default:
         statusColor = AppTheme.textSecondaryLight;
     }
 
@@ -211,7 +213,10 @@ class _SellerOrdersScreenState extends State<SellerOrdersScreen> with SingleTick
         color: AppTheme.surfaceLight,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
-          BoxShadow(color: AppTheme.shadowLight, blurRadius: 10, offset: const Offset(0, 4)),
+          BoxShadow(
+              color: AppTheme.shadowLight,
+              blurRadius: 10,
+              offset: const Offset(0, 4)),
         ],
       ),
       child: Column(
@@ -222,7 +227,7 @@ class _SellerOrdersScreenState extends State<SellerOrdersScreen> with SingleTick
             children: [
               Text(
                 'Order #${orderId.length >= 8 ? orderId.substring(0, 8).toUpperCase() : orderId.toUpperCase()}',
-                style: TextStyle(fontWeight: FontWeight.w800, fontSize: 12.sp),
+                style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14.0),
               ),
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 2.w, vertical: 0.5.h),
@@ -232,7 +237,10 @@ class _SellerOrdersScreenState extends State<SellerOrdersScreen> with SingleTick
                 ),
                 child: Text(
                   status.toUpperCase().replaceAll('_', ' '),
-                  style: TextStyle(color: statusColor, fontSize: 9.sp, fontWeight: FontWeight.w800),
+                  style: TextStyle(
+                      color: statusColor,
+                      fontSize: 9.sp,
+                      fontWeight: FontWeight.w800),
                 ),
               ),
             ],
@@ -245,26 +253,42 @@ class _SellerOrdersScreenState extends State<SellerOrdersScreen> with SingleTick
             children: [
               CircleAvatar(
                 radius: 20,
-                backgroundImage: buyer['avatar_url'] != null ? NetworkImage(buyer['avatar_url']) : null,
+                backgroundImage: buyer['avatar_url'] != null
+                    ? NetworkImage(buyer['avatar_url'])
+                    : null,
                 backgroundColor: AppTheme.primaryLight.withValues(alpha: 0.1),
-                child: buyer['avatar_url'] == null ? Icon(Icons.person, color: AppTheme.primaryLight) : null,
+                child: buyer['avatar_url'] == null
+                    ? Icon(Icons.person, color: AppTheme.primaryLight)
+                    : null,
               ),
               SizedBox(width: 3.w),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(buyer['full_name'] ?? 'Guest Buyer', style: TextStyle(fontWeight: FontWeight.w700)),
-                    Text(order['delivery_method'] == 'pickup' ? 'Pickup Station' : 'Doorstep Delivery', 
-                      style: TextStyle(fontSize: 9.sp, color: AppTheme.textSecondaryLight)),
+                    Text(buyer['full_name'] ?? 'Guest Buyer',
+                        style: TextStyle(fontWeight: FontWeight.w700)),
+                    Text(
+                        order['delivery_method'] == 'pickup'
+                            ? 'Pickup Station'
+                            : 'Doorstep Delivery',
+                        style: TextStyle(
+                            fontSize: 9.sp,
+                            color: AppTheme.textSecondaryLight)),
                   ],
                 ),
               ),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text('KSh ${order['total_amount']}', style: TextStyle(fontWeight: FontWeight.w800, color: AppTheme.primaryLight, fontSize: 13.sp)),
-                  Text('${order['order_items']?.length ?? 0} items', style: TextStyle(fontSize: 9.sp, color: AppTheme.textSecondaryLight)),
+                  Text('KSh ${order['total_amount']}',
+                      style: TextStyle(
+                          fontWeight: FontWeight.w800,
+                          color: AppTheme.primaryLight,
+                          fontSize: 15.0)),
+                  Text('${order['order_items']?.length ?? 0} items',
+                      style: TextStyle(
+                          fontSize: 9.sp, color: AppTheme.textSecondaryLight)),
                 ],
               ),
             ],
@@ -283,11 +307,15 @@ class _SellerOrdersScreenState extends State<SellerOrdersScreen> with SingleTick
                       onPressed: () => _updateOrderStatus(orderId, 'cancelled'),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: AppTheme.errorLight,
-                        side: BorderSide(color: AppTheme.errorLight.withValues(alpha: 0.4)),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        side: BorderSide(
+                            color: AppTheme.errorLight.withValues(alpha: 0.4)),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10)),
                         padding: EdgeInsets.symmetric(vertical: 1.2.h),
                       ),
-                      child: Text('Cancel', style: TextStyle(fontSize: 10.sp, fontWeight: FontWeight.w600)),
+                      child: Text('Cancel',
+                          style: TextStyle(
+                              fontSize: 12.0, fontWeight: FontWeight.w600)),
                     ),
                   ),
                 if (!['shipped', 'delivered', 'completed'].contains(status))
@@ -299,11 +327,14 @@ class _SellerOrdersScreenState extends State<SellerOrdersScreen> with SingleTick
                   child: ElevatedButton.icon(
                     onPressed: () => _updateOrderStatus(orderId, nextStatus),
                     icon: Icon(_getActionIcon(status), size: 18),
-                    label: Text(_getActionLabel(status), style: TextStyle(fontSize: 10.sp, fontWeight: FontWeight.w700)),
+                    label: Text(_getActionLabel(status),
+                        style: TextStyle(
+                            fontSize: 12.0, fontWeight: FontWeight.w700)),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppTheme.primaryLight,
                       foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10)),
                       padding: EdgeInsets.symmetric(vertical: 1.2.h),
                       elevation: 0,
                     ),

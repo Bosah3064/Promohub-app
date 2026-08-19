@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'package:sizer/sizer.dart';
 
@@ -209,11 +210,13 @@ class _CreateListingState extends State<CreateListing> {
               itemBuilder: (context, index) {
                 return ClipRRect(
                   borderRadius: BorderRadius.circular(12),
-                  child: CustomImageWidget(
-                    imageUrl: _selectedPhotos[index].path,
+                  child: Image.file(
+                    File(_selectedPhotos[index].path),
                     width: double.infinity,
                     height: 30.h,
                     fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) =>
+                        const Center(child: Icon(Icons.broken_image_outlined)),
                   ),
                 );
               },
@@ -361,14 +364,26 @@ class _CreateListingState extends State<CreateListing> {
         if (mounted) {
           setState(() => _isLoading = false);
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('You must create a shop first to post listings!')),
+            const SnackBar(
+                content:
+                    Text('You must create a shop first to post listings!')),
           );
           Navigator.pushNamed(context, '/seller-registration');
         }
         return;
       }
 
-      // We should upload images here and get URLs, but for now we'll use placeholder
+      final imageUrls = <String>[];
+      for (var index = 0; index < _selectedPhotos.length; index++) {
+        final photo = _selectedPhotos[index];
+        final imageUrl = await FirebaseService().uploadImage(
+          'listings',
+          '${userId}_${DateTime.now().millisecondsSinceEpoch}_$index.jpg',
+          File(photo.path),
+        );
+        imageUrls.add(imageUrl);
+      }
+
       final listingData = {
         'seller_id': userId,
         'shop_id': shop['id'],
@@ -377,8 +392,9 @@ class _CreateListingState extends State<CreateListing> {
         'price': double.tryParse(_price ?? '0') ?? 0,
         'condition': _selectedCondition?.toLowerCase().replaceAll(' ', '_'),
         'status': 'active',
-        // In reality, we map _selectedCategory to category UUID, using placeholder category logic
-        // 'category_id': ...
+        'images': imageUrls,
+        'location': _selectedLocation ?? '',
+        'currency': _selectedCurrency,
       };
 
       await marketplaceService.createListing(listingData);
@@ -389,54 +405,54 @@ class _CreateListingState extends State<CreateListing> {
         });
 
         // Show success dialog
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => AlertDialog(
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              CustomIconWidget(
-                iconName: 'check_circle',
-                color: AppTheme.lightTheme.primaryColor,
-                size: 64,
-              ),
-              SizedBox(height: 2.h),
-              Text(
-                'Listing Posted Successfully!',
-                style: AppTheme.lightTheme.textTheme.titleLarge,
-                textAlign: TextAlign.center,
-              ),
-              SizedBox(height: 1.h),
-              Text(
-                'Your item is now live on PromoHub',
-                style: AppTheme.lightTheme.textTheme.bodyMedium?.copyWith(
-                  color: AppTheme.lightTheme.colorScheme.onSurfaceVariant,
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => AlertDialog(
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CustomIconWidget(
+                  iconName: 'check_circle',
+                  color: AppTheme.lightTheme.primaryColor,
+                  size: 64,
                 ),
-                textAlign: TextAlign.center,
+                SizedBox(height: 2.h),
+                Text(
+                  'Listing Posted Successfully!',
+                  style: AppTheme.lightTheme.textTheme.titleLarge,
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 1.h),
+                Text(
+                  'Your item is now live on PromoHub',
+                  style: AppTheme.lightTheme.textTheme.bodyMedium?.copyWith(
+                    color: AppTheme.lightTheme.colorScheme.onSurfaceVariant,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context); // Close dialog
+                  Navigator.pop(context); // Close preview
+                  Navigator.pop(context); // Close create listing
+                },
+                child: const Text('View Listing'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context); // Close dialog
+                  Navigator.pop(context); // Close preview
+                  _resetForm();
+                },
+                child: const Text('Create Another'),
               ),
             ],
           ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context); // Close dialog
-                Navigator.pop(context); // Close preview
-                Navigator.pop(context); // Close create listing
-              },
-              child: const Text('View Listing'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context); // Close dialog
-                Navigator.pop(context); // Close preview
-                _resetForm();
-              },
-              child: const Text('Create Another'),
-            ),
-          ],
-        ),
-      );
+        );
       }
     } catch (e) {
       if (mounted) {

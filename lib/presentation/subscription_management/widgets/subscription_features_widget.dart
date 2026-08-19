@@ -42,7 +42,7 @@ class SubscriptionFeaturesWidget extends StatelessWidget {
             Text(
               'Feature Comparison',
               style: GoogleFonts.inter(
-                fontSize: 16.sp,
+                fontSize: 18.0,
                 fontWeight: FontWeight.w700,
                 color: Colors.grey[800],
               ),
@@ -58,7 +58,7 @@ class SubscriptionFeaturesWidget extends StatelessWidget {
                   child: Text(
                     'Features',
                     style: GoogleFonts.inter(
-                      fontSize: 12.sp,
+                      fontSize: 14.0,
                       fontWeight: FontWeight.w600,
                       color: Colors.grey[700],
                     ),
@@ -121,7 +121,7 @@ class SubscriptionFeaturesWidget extends StatelessWidget {
             child: Text(
               feature,
               style: GoogleFonts.inter(
-                fontSize: 11.sp,
+                fontSize: 13.0,
                 color: Colors.grey[700],
               ),
             ),
@@ -134,7 +134,7 @@ class SubscriptionFeaturesWidget extends StatelessWidget {
               child: Center(
                 child: Icon(
                   hasFeature ? Icons.check_circle : Icons.remove_circle,
-                  size: 16.sp,
+                  size: 18.0,
                   color: hasFeature ? Colors.green[600] : Colors.grey[400],
                 ),
               ),
@@ -155,7 +155,7 @@ class SubscriptionFeaturesWidget extends StatelessWidget {
             child: Text(
               label,
               style: GoogleFonts.inter(
-                fontSize: 11.sp,
+                fontSize: 13.0,
                 fontWeight: FontWeight.w600,
                 color: Colors.grey[700],
               ),
@@ -182,7 +182,7 @@ class SubscriptionFeaturesWidget extends StatelessWidget {
                   child: Text(
                     limitText,
                     style: GoogleFonts.inter(
-                      fontSize: 10.sp,
+                      fontSize: 12.0,
                       fontWeight: FontWeight.w700,
                       color:
                           limit == null ? Colors.purple[700] : Colors.blue[700],
@@ -213,7 +213,7 @@ class SubscriptionFeaturesWidget extends StatelessWidget {
               child: Text(
                 'Monthly Price',
                 style: GoogleFonts.inter(
-                  fontSize: 12.sp,
+                  fontSize: 14.0,
                   fontWeight: FontWeight.w700,
                   color: Colors.grey[800],
                 ),
@@ -232,7 +232,7 @@ class SubscriptionFeaturesWidget extends StatelessWidget {
                     Text(
                       isFree ? 'FREE' : 'KSh ${priceKsh.toStringAsFixed(0)}',
                       style: GoogleFonts.inter(
-                        fontSize: 11.sp,
+                        fontSize: 13.0,
                         fontWeight: FontWeight.w700,
                         color: isFree ? Colors.green[600] : Colors.grey[800],
                       ),

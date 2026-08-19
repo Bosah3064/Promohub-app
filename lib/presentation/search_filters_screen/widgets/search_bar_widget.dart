@@ -91,7 +91,7 @@ class _SearchBarWidgetState extends State<SearchBarWidget>
         Container(
           decoration: BoxDecoration(
             color: AppTheme.lightTheme.colorScheme.surface,
-            borderRadius: BorderRadius.circular(12.sp),
+            borderRadius: BorderRadius.circular(14.0),
             border: Border.all(
               color: widget.focusNode.hasFocus
                   ? AppTheme.lightTheme.colorScheme.primary
@@ -111,15 +111,15 @@ class _SearchBarWidgetState extends State<SearchBarWidget>
                         AppTheme.lightTheme.inputDecorationTheme.hintStyle,
                     border: InputBorder.none,
                     contentPadding: EdgeInsets.symmetric(
-                      horizontal: 16.sp,
-                      vertical: 12.sp,
+                      horizontal: 18.0,
+                      vertical: 14.0,
                     ),
                     prefixIcon: Padding(
-                      padding: EdgeInsets.all(12.sp),
+                      padding: EdgeInsets.all(14.0),
                       child: CustomIconWidget(
                         iconName: 'search',
                         color: AppTheme.lightTheme.colorScheme.onSurfaceVariant,
-                        size: 20.sp,
+                        size: 22.0,
                       ),
                     ),
                   ),
@@ -149,7 +149,7 @@ class _SearchBarWidgetState extends State<SearchBarWidget>
                         color: widget.isVoiceSearchActive
                             ? AppTheme.lightTheme.colorScheme.primary
                             : AppTheme.lightTheme.colorScheme.onSurfaceVariant,
-                        size: 20.sp,
+                        size: 22.0,
                       ),
                     ),
                   );
@@ -162,13 +162,13 @@ class _SearchBarWidgetState extends State<SearchBarWidget>
                 icon: CustomIconWidget(
                   iconName: 'qr_code_scanner',
                   color: AppTheme.lightTheme.colorScheme.onSurfaceVariant,
-                  size: 20.sp,
+                  size: 22.0,
                 ),
               ),
 
               // Filter Toggle Button
               Container(
-                margin: EdgeInsets.only(right: 8.sp),
+                margin: EdgeInsets.only(right: 10.0),
                 child: IconButton(
                   onPressed: widget.onFilterToggle,
                   icon: Stack(
@@ -178,15 +178,15 @@ class _SearchBarWidgetState extends State<SearchBarWidget>
                         color: widget.isFilterActive
                             ? AppTheme.lightTheme.colorScheme.primary
                             : AppTheme.lightTheme.colorScheme.onSurfaceVariant,
-                        size: 20.sp,
+                        size: 22.0,
                       ),
                       if (widget.isFilterActive)
                         Positioned(
                           right: 0,
                           top: 0,
                           child: Container(
-                            width: 8.sp,
-                            height: 8.sp,
+                            width: 10.0,
+                            height: 10.0,
                             decoration: BoxDecoration(
                               color: AppTheme.lightTheme.colorScheme.primary,
                               shape: BoxShape.circle,
@@ -204,10 +204,10 @@ class _SearchBarWidgetState extends State<SearchBarWidget>
         // Suggestions Dropdown
         if (_showSuggestions)
           Container(
-            margin: EdgeInsets.only(top: 8.sp),
+            margin: EdgeInsets.only(top: 10.0),
             decoration: BoxDecoration(
               color: AppTheme.lightTheme.colorScheme.surface,
-              borderRadius: BorderRadius.circular(12.sp),
+              borderRadius: BorderRadius.circular(14.0),
               boxShadow: [
                 BoxShadow(
                   color: AppTheme.lightTheme.colorScheme.shadow,
@@ -221,7 +221,7 @@ class _SearchBarWidgetState extends State<SearchBarWidget>
               children: [
                 if (widget.recentSearches.isNotEmpty) ...[
                   Padding(
-                    padding: EdgeInsets.all(16.sp),
+                    padding: EdgeInsets.all(18.0),
                     child: Text(
                       'Recent Searches',
                       style: AppTheme.lightTheme.textTheme.titleSmall,
@@ -233,7 +233,7 @@ class _SearchBarWidgetState extends State<SearchBarWidget>
                             iconName: 'history',
                             color: AppTheme
                                 .lightTheme.colorScheme.onSurfaceVariant,
-                            size: 18.sp,
+                            size: 20.0,
                           ),
                           title: Text(
                             search,
@@ -251,7 +251,7 @@ class _SearchBarWidgetState extends State<SearchBarWidget>
                   ),
                 ],
                 Padding(
-                  padding: EdgeInsets.all(16.sp),
+                  padding: EdgeInsets.all(18.0),
                   child: Text(
                     'Browse Categories',
                     style: AppTheme.lightTheme.textTheme.titleSmall,
@@ -262,7 +262,7 @@ class _SearchBarWidgetState extends State<SearchBarWidget>
                     leading: CustomIconWidget(
                       iconName: 'category',
                       color: AppTheme.lightTheme.colorScheme.onSurfaceVariant,
-                      size: 18.sp,
+                      size: 20.0,
                     ),
                     title: Text(
                       category,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
+import 'dart:async';
 import '../../core/app_export.dart';
 import '../../services/marketplace_service.dart';
 import '../../services/firebase_service.dart';
@@ -18,9 +19,10 @@ class _ShopProfileScreenState extends State<ShopProfileScreen> {
   final MarketplaceService _marketplaceService = MarketplaceService();
   final _firebaseService = FirebaseService();
   Map<String, dynamic>? _shopData;
-  final List<Map<String, dynamic>> _shopProducts = [];
   List<Map<String, dynamic>> _reviews = [];
   bool _isLoading = true;
+  StreamSubscription? _shopSubscription;
+  StreamSubscription? _reviewsSubscription;
 
   @override
   void initState() {
@@ -28,21 +30,30 @@ class _ShopProfileScreenState extends State<ShopProfileScreen> {
     _loadShopData();
   }
 
+  @override
+  void dispose() {
+    _shopSubscription?.cancel();
+    _reviewsSubscription?.cancel();
+    super.dispose();
+  }
+
   Future<void> _loadShopData() async {
     try {
-      final firestore = _firebaseService.firestore;
-      final doc = await firestore.collection('shops').doc(widget.shopId).get();
-      final data = doc.exists ? {'id': doc.id, ...?doc.data()} : null;
-
-      final reviews = await _marketplaceService.getShopReviews(widget.shopId);
-
-      if (mounted) {
+      _shopSubscription = _firebaseService.firestore
+          .collection('shops')
+          .doc(widget.shopId)
+          .snapshots()
+          .listen((doc) {
+        if (!mounted) return;
         setState(() {
-          _shopData = data;
-          _reviews = reviews;
+          _shopData = doc.exists ? {'id': doc.id, ...?doc.data()} : null;
           _isLoading = false;
         });
-      }
+      });
+      _reviewsSubscription =
+          _marketplaceService.watchShopReviews(widget.shopId).listen((reviews) {
+        if (mounted) setState(() => _reviews = reviews);
+      });
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -147,7 +158,7 @@ class _ShopProfileScreenState extends State<ShopProfileScreen> {
                       Text(
                           _shopData!['description'] ??
                               'No description provided.',
-                          style: TextStyle(fontSize: 11.sp)),
+                          style: TextStyle(fontSize: 13.0)),
                       SizedBox(height: 3.h),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -276,7 +287,7 @@ class _ShopProfileScreenState extends State<ShopProfileScreen> {
                                 SizedBox(height: 1.5.h),
                                 Text(review['comment'],
                                     style: TextStyle(
-                                        fontSize: 11.sp,
+                                        fontSize: 13.0,
                                         color: AppTheme.textPrimaryLight)),
                               ]
                             ],
@@ -297,11 +308,11 @@ class _ShopProfileScreenState extends State<ShopProfileScreen> {
         Text(value,
             style: TextStyle(
                 fontWeight: FontWeight.w800,
-                fontSize: 16.sp,
+                fontSize: 18.0,
                 color: AppTheme.primaryLight)),
         Text(label,
             style:
-                TextStyle(color: AppTheme.textSecondaryLight, fontSize: 10.sp)),
+                TextStyle(color: AppTheme.textSecondaryLight, fontSize: 12.0)),
       ],
     );
   }

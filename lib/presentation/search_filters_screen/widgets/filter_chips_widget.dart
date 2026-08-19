@@ -46,10 +46,10 @@ class FilterChipsWidget extends StatelessWidget {
               ),
             ],
           ),
-          SizedBox(height: 8.sp),
+          SizedBox(height: 10.0),
           Wrap(
-            spacing: 8.sp,
-            runSpacing: 8.sp,
+            spacing: 10.0,
+            runSpacing: 10.0,
             children: activeFilters.asMap().entries.map((entry) {
               final index = entry.key;
               final filter = entry.value;
@@ -104,7 +104,7 @@ class FilterChipsWidget extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: chipColor,
-        borderRadius: BorderRadius.circular(20.sp),
+        borderRadius: BorderRadius.circular(22.0),
         border: Border.all(
           color: AppTheme.lightTheme.colorScheme.outline.withValues(alpha: 0.3),
           width: 1,
@@ -115,18 +115,18 @@ class FilterChipsWidget extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Padding(
-              padding: EdgeInsets.only(left: 12.sp),
+              padding: EdgeInsets.only(left: 14.0),
               child: CustomIconWidget(
                 iconName: _getIconName(chipIcon),
                 color: AppTheme.lightTheme.colorScheme.onSurfaceVariant,
-                size: 16.sp,
+                size: 18.0,
               ),
             ),
             Flexible(
               child: Padding(
                 padding: EdgeInsets.symmetric(
-                  horizontal: 8.sp,
-                  vertical: 8.sp,
+                  horizontal: 10.0,
+                  vertical: 10.0,
                 ),
                 child: Text(
                   label,
@@ -142,7 +142,7 @@ class FilterChipsWidget extends StatelessWidget {
               onTap: onRemove,
               child: Container(
                 padding: EdgeInsets.all(4.sp),
-                margin: EdgeInsets.only(right: 8.sp),
+                margin: EdgeInsets.only(right: 10.0),
                 decoration: BoxDecoration(
                   color: AppTheme.lightTheme.colorScheme.onSurfaceVariant
                       .withValues(alpha: 0.1),
@@ -151,7 +151,7 @@ class FilterChipsWidget extends StatelessWidget {
                 child: CustomIconWidget(
                   iconName: 'close',
                   color: AppTheme.lightTheme.colorScheme.onSurfaceVariant,
-                  size: 14.sp,
+                  size: 16.0,
                 ),
               ),
             ),

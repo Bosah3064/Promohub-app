@@ -51,13 +51,13 @@ class LanguageSelectorWidget extends StatelessWidget {
           child: Icon(
             Icons.language,
             color: Colors.purple[700],
-            size: 20.sp,
+            size: 22.0,
           ),
         ),
         title: Text(
           'Language',
           style: GoogleFonts.inter(
-            fontSize: 13.sp,
+            fontSize: 15.0,
             fontWeight: FontWeight.w600,
             color: Colors.grey[700],
           ),
@@ -66,13 +66,13 @@ class LanguageSelectorWidget extends StatelessWidget {
           children: [
             Text(
               currentLanguage['flag']!,
-              style: GoogleFonts.inter(fontSize: 14.sp),
+              style: GoogleFonts.inter(fontSize: 16.0),
             ),
             SizedBox(width: 2.w),
             Text(
               currentLanguage['name']!,
               style: GoogleFonts.inter(
-                fontSize: 12.sp,
+                fontSize: 14.0,
                 color: Colors.grey[600],
               ),
             ),
@@ -90,7 +90,7 @@ class LanguageSelectorWidget extends StatelessWidget {
                   Text(
                     'Select Language',
                     style: GoogleFonts.inter(
-                      fontSize: 16.sp,
+                      fontSize: 18.0,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -105,7 +105,7 @@ class LanguageSelectorWidget extends StatelessWidget {
                         return ListTile(
                           leading: Text(
                             language['flag']!,
-                            style: GoogleFonts.inter(fontSize: 16.sp),
+                            style: GoogleFonts.inter(fontSize: 18.0),
                           ),
                           title: Text(
                             language['name']!,
@@ -122,7 +122,7 @@ class LanguageSelectorWidget extends StatelessWidget {
                               ? Icon(
                                   Icons.check_circle,
                                   color: Colors.blue[700],
-                                  size: 20.sp,
+                                  size: 22.0,
                                 )
                               : null,
                           onTap: () {

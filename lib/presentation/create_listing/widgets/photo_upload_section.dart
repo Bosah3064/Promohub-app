@@ -404,7 +404,7 @@ class _PhotoUploadSectionState extends State<PhotoUploadSection> {
                   'MAIN',
                   style: AppTheme.lightTheme.textTheme.labelSmall?.copyWith(
                     color: AppTheme.lightTheme.colorScheme.onPrimary,
-                    fontSize: 8.sp,
+                    fontSize: 10.0,
                   ),
                 ),
               ),

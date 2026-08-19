@@ -32,7 +32,7 @@ class SocialSignupWidget extends StatelessWidget {
               child: Text(
                 'OR',
                 style: TextStyle(
-                  fontSize: 14.sp,
+                  fontSize: 16.0,
                   color: AppTheme.lightTheme.colorScheme.onSurfaceVariant,
                   fontWeight: FontWeight.w500,
                 ),
@@ -49,36 +49,29 @@ class SocialSignupWidget extends StatelessWidget {
         SizedBox(height: 3.h),
 
         // Social Signup Buttons
-        Column(
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Google Sign Up
             _buildSocialButton(
               context: context,
-              provider: 'Google',
               svgPath: 'assets/icons/google_logo.svg',
               backgroundColor: Colors.white,
               textColor: Colors.black87,
               borderColor: Colors.grey.shade300,
               onTap: () => onSocialSignup('google'),
             ),
-            SizedBox(height: 2.h),
-
-            // Facebook Sign Up
+            SizedBox(width: 4.w),
             _buildSocialButton(
               context: context,
-              provider: 'Facebook',
               svgPath: 'assets/icons/facebook_logo.svg',
               backgroundColor: const Color(0xFF1877F2),
               textColor: Colors.white,
               borderColor: const Color(0xFF1877F2),
               onTap: () => onSocialSignup('facebook'),
             ),
-            SizedBox(height: 2.h),
-
-            // Apple Sign Up
+            SizedBox(width: 4.w),
             _buildSocialButton(
               context: context,
-              provider: 'Apple',
               svgPath: 'assets/icons/apple_logo.svg',
               backgroundColor: Colors.black,
               textColor: Colors.white,
@@ -93,48 +86,42 @@ class SocialSignupWidget extends StatelessWidget {
 
   Widget _buildSocialButton({
     required BuildContext context,
-    required String provider,
     required String svgPath,
     required Color backgroundColor,
     required Color textColor,
     required Color borderColor,
     required VoidCallback onTap,
   }) {
-    return SizedBox(
-      width: double.infinity,
-      child: OutlinedButton(
-        onPressed: isLoading ? null : onTap,
-        style: OutlinedButton.styleFrom(
-          backgroundColor: backgroundColor,
-          foregroundColor: textColor,
-          side: BorderSide(color: borderColor, width: 1),
-          padding: EdgeInsets.symmetric(vertical: 2.h),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+    final providerName = svgPath.contains('google')
+        ? 'Google'
+        : svgPath.contains('facebook')
+            ? 'Facebook'
+            : 'Apple';
+    return Tooltip(
+      message: providerName,
+      child: SizedBox(
+        width: 58,
+        height: 58,
+        child: OutlinedButton(
+          onPressed: isLoading ? null : onTap,
+          style: OutlinedButton.styleFrom(
+            backgroundColor: backgroundColor,
+            foregroundColor: textColor,
+            side: BorderSide(color: borderColor, width: 1),
+            padding: EdgeInsets.zero,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            SizedBox(
+          child: SizedBox(
+            width: 22,
+            height: 22,
+            child: SvgPicture.asset(
+              svgPath,
               width: 22,
               height: 22,
-              child: SvgPicture.asset(
-                svgPath,
-                width: 22,
-                height: 22,
-              ),
             ),
-            SizedBox(width: 3.w),
-            Text(
-              'Continue with $provider',
-              style: TextStyle(
-                fontSize: 14.sp,
-                fontWeight: FontWeight.w600,
-                color: textColor,
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );

@@ -58,14 +58,8 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
           'created_at': FieldValue.serverTimestamp(),
         });
 
-        _showSuccessMessage(
-            'Account created successfully! Welcome to PromoHub.');
+        _showCongratulationsDialog(fullName);
         HapticFeedback.lightImpact();
-
-        await Future.delayed(const Duration(seconds: 1));
-        if (mounted) {
-          Navigator.pushReplacementNamed(context, '/marketplace-home');
-        }
       } else {
         _showErrorMessage('Registration failed. Please try again.');
       }
@@ -124,6 +118,109 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     Navigator.pushReplacementNamed(context, '/login-screen');
   }
 
+  void _showCongratulationsDialog(String userName) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext ctx) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
+          elevation: 0,
+          backgroundColor: Colors.transparent,
+          child: Container(
+            padding: EdgeInsets.all(28),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Color(0xFF00C853), Color(0xFF00897B)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(
+                  color: Color(0xFF00C853).withValues(alpha: 0.4),
+                  blurRadius: 25,
+                  offset: Offset(0, 12),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.celebration,
+                    color: Colors.white,
+                    size: 56,
+                  ),
+                ),
+                SizedBox(height: 24),
+                Text(
+                  '🎉 Welcome!',
+                  style: TextStyle(
+                    fontSize: 30,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                    letterSpacing: -0.5,
+                  ),
+                ),
+                SizedBox(height: 12),
+                Text(
+                  'Congratulations $userName!',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
+                ),
+                SizedBox(height: 8),
+                Text(
+                  'Your account has been created successfully. You\'re now part of the PromoHub community!',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 15,
+                    color: Colors.white.withValues(alpha: 0.9),
+                    height: 1.5,
+                  ),
+                ),
+                SizedBox(height: 32),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(ctx).pop();
+                      Navigator.pushReplacementNamed(context, '/marketplace-home');
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: Color(0xFF00897B),
+                      padding: EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: Text(
+                      'Start Exploring 🚀',
+                      style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   void _showSuccessMessage(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -138,7 +235,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
             Expanded(
               child: Text(
                 message,
-                style: TextStyle(fontSize: 14.sp),
+                style: TextStyle(fontSize: 16.0),
               ),
             ),
           ],
@@ -163,7 +260,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
             Expanded(
               child: Text(
                 message,
-                style: TextStyle(fontSize: 14.sp),
+                style: TextStyle(fontSize: 16.0),
               ),
             ),
           ],

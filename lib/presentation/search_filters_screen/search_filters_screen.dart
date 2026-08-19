@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
 
 import '../../core/app_export.dart';
+import '../../services/marketplace_service.dart';
 import './widgets/filter_chips_widget.dart';
 import './widgets/filter_panel_widget.dart';
 import './widgets/search_bar_widget.dart';
@@ -23,76 +24,62 @@ class _SearchFiltersScreenState extends State<SearchFiltersScreen>
   bool _isVoiceSearchActive = false;
   String _selectedSortOption = 'Relevance';
 
-  // Mock data for search results
-  final List<Map<String, dynamic>> _searchResults = [
-    {
-      "id": 1,
-      "title": "iPhone 14 Pro Max",
-      "price": "\$1,200",
-      "location": "Lagos, Nigeria",
-      "image":
-          "https://images.pexels.com/photos/788946/pexels-photo-788946.jpeg",
-      "condition": "New",
-      "seller": "TechStore Lagos",
-      "distance": "2.5 km",
-      "postedDate": "2 hours ago",
-      "isFavorite": false,
-    },
-    {
-      "id": 2,
-      "title": "MacBook Air M2",
-      "price": "\$999",
-      "location": "Abuja, Nigeria",
-      "image":
-          "https://images.pexels.com/photos/205421/pexels-photo-205421.jpeg",
-      "condition": "Used",
-      "seller": "John Doe",
-      "distance": "5.2 km",
-      "postedDate": "1 day ago",
-      "isFavorite": true,
-    },
-    {
-      "id": 3,
-      "title": "Samsung Galaxy S23",
-      "price": "\$800",
-      "location": "Port Harcourt, Nigeria",
-      "image":
-          "https://images.pexels.com/photos/699122/pexels-photo-699122.jpeg",
-      "condition": "New",
-      "seller": "Mobile World",
-      "distance": "1.8 km",
-      "postedDate": "3 hours ago",
-      "isFavorite": false,
-    },
-    {
-      "id": 4,
-      "title": "Dell XPS 13",
-      "price": "\$750",
-      "location": "Kano, Nigeria",
-      "image": "https://images.pexels.com/photos/18105/pexels-photo.jpg",
-      "condition": "Used",
-      "seller": "Tech Hub",
-      "distance": "3.1 km",
-      "postedDate": "5 hours ago",
-      "isFavorite": false,
-    },
-  ];
+  final MarketplaceService _marketplaceService = MarketplaceService();
+  bool _isSearching = false;
 
-  // Mock data for active filters
-  final List<Map<String, dynamic>> _activeFilters = [
-    {"label": "Electronics", "type": "category"},
-    {"label": "\$500 - \$1500", "type": "price"},
-    {"label": "Within 5km", "type": "location"},
-  ];
+  // Dynamic data from database
+  List<Map<String, dynamic>> _searchResults = [];
+  List<Map<String, dynamic>> _activeFilters = [];
+  List<String> _recentSearches = [];
 
-  // Mock data for recent searches
-  final List<String> _recentSearches = [
-    "iPhone 14",
-    "MacBook Pro",
-    "Samsung Galaxy",
-    "Gaming Laptop",
-    "iPad Air",
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _loadInitialResults();
+  }
+
+  Future<void> _loadInitialResults() async {
+    setState(() => _isSearching = true);
+    try {
+      final results = await _marketplaceService.getListings(limit: 20);
+      if (mounted) {
+        setState(() {
+          _searchResults = results;
+          _isSearching = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) setState(() => _isSearching = false);
+    }
+  }
+
+  // Allow user to trigger search when typing stops (simplified)
+  Future<void> _performSearch(String query) async {
+    if (query.isEmpty) {
+      _loadInitialResults();
+      return;
+    }
+    setState(() => _isSearching = true);
+    try {
+      final results = await _marketplaceService.getListings(
+        searchQuery: query,
+        limit: 20,
+      );
+      if (mounted) {
+        setState(() {
+          _searchResults = results;
+          _isSearching = false;
+          // Add to recent searches
+          if (!_recentSearches.contains(query)) {
+            _recentSearches.insert(0, query);
+            if (_recentSearches.length > 10) _recentSearches.removeLast();
+          }
+        });
+      }
+    } catch (e) {
+      if (mounted) setState(() => _isSearching = false);
+    }
+  }
 
   @override
   void dispose() {
@@ -162,8 +149,7 @@ class _SearchFiltersScreenState extends State<SearchFiltersScreen>
   }
 
   Future<void> _onRefresh() async {
-    await Future.delayed(const Duration(seconds: 1));
-    // Simulate refresh
+    await _loadInitialResults();
   }
 
   @override
@@ -200,7 +186,7 @@ class _SearchFiltersScreenState extends State<SearchFiltersScreen>
         children: [
           // Search Bar Section
           Container(
-            padding: EdgeInsets.all(16.sp),
+            padding: EdgeInsets.all(18.0),
             decoration: BoxDecoration(
               color: AppTheme.lightTheme.colorScheme.surface,
               boxShadow: [
@@ -223,7 +209,7 @@ class _SearchFiltersScreenState extends State<SearchFiltersScreen>
                   onFilterToggle: _toggleFilterPanel,
                   isFilterActive: _activeFilters.isNotEmpty,
                 ),
-                SizedBox(height: 12.sp),
+                SizedBox(height: 14.0),
                 FilterChipsWidget(
                   activeFilters: _activeFilters,
                   onRemoveFilter: _removeFilter,

@@ -51,7 +51,7 @@ class CurrencyPreviewWidget extends StatelessWidget {
                   child: Text(
                     symbol,
                     style: GoogleFonts.inter(
-                      fontSize: 16.sp,
+                      fontSize: 18.0,
                       fontWeight: FontWeight.w700,
                       color: Colors.green[700],
                     ),
@@ -65,7 +65,7 @@ class CurrencyPreviewWidget extends StatelessWidget {
                       Text(
                         name,
                         style: GoogleFonts.inter(
-                          fontSize: 13.sp,
+                          fontSize: 15.0,
                           fontWeight: FontWeight.w600,
                           color: Colors.grey[800],
                         ),
@@ -73,7 +73,7 @@ class CurrencyPreviewWidget extends StatelessWidget {
                       Text(
                         currencyCode,
                         style: GoogleFonts.inter(
-                          fontSize: 11.sp,
+                          fontSize: 13.0,
                           color: Colors.grey[600],
                         ),
                       ),
@@ -109,7 +109,7 @@ class CurrencyPreviewWidget extends StatelessWidget {
             Text(
               'Price Preview',
               style: GoogleFonts.inter(
-                fontSize: 12.sp,
+                fontSize: 14.0,
                 fontWeight: FontWeight.w600,
                 color: Colors.grey[700],
               ),
@@ -135,19 +135,19 @@ class CurrencyPreviewWidget extends StatelessWidget {
                       Text(
                         '\$${usdPrice.toStringAsFixed(0)}',
                         style: GoogleFonts.inter(
-                          fontSize: 10.sp,
+                          fontSize: 12.0,
                           color: Colors.grey[500],
                         ),
                       ),
                       Icon(
                         Icons.arrow_downward,
-                        size: 12.sp,
+                        size: 14.0,
                         color: Colors.grey[400],
                       ),
                       Text(
                         '$symbol${convertedPrice.toStringAsFixed(currency['decimal_places'] ?? 2)}',
                         style: GoogleFonts.inter(
-                          fontSize: 11.sp,
+                          fontSize: 13.0,
                           fontWeight: FontWeight.w600,
                           color: Colors.grey[800],
                         ),
@@ -171,7 +171,7 @@ class CurrencyPreviewWidget extends StatelessWidget {
                 children: [
                   Icon(
                     Icons.info_outline,
-                    size: 14.sp,
+                    size: 16.0,
                     color: Colors.orange[700],
                   ),
                   SizedBox(width: 2.w),

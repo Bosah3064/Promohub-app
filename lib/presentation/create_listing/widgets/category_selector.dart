@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
 
 import '../../../core/app_export.dart';
+import '../../../services/marketplace_service.dart';
 
 class CategorySelector extends StatefulWidget {
   final String? selectedCategory;
@@ -1836,7 +1837,7 @@ class _CategorySelectorState extends State<CategorySelector> {
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: CustomIconWidget(
-                          iconName: category['icon'],
+                          iconName: category['icon'] ?? 'category',
                           color: isSelected
                               ? AppTheme.lightTheme.primaryColor
                               : AppTheme

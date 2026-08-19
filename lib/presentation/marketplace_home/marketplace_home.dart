@@ -1,8 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:sizer/sizer.dart';
-
 
 import '../../core/app_export.dart';
 import '../../services/location_currency_service.dart';
@@ -15,6 +16,7 @@ import './widgets/filter_bottom_sheet_widget.dart';
 import './widgets/listing_card_widget.dart';
 import './widgets/location_selector_widget.dart';
 import './widgets/quick_actions_bottom_sheet_widget.dart';
+import './widgets/promo_banner_widget.dart';
 import './widgets/search_bar_widget.dart';
 
 class MarketplaceHome extends StatefulWidget {
@@ -92,13 +94,11 @@ class _MarketplaceHomeState extends State<MarketplaceHome>
 
       // Apply location filter
       if (_appliedFilters!['location'] != null) {
-        final filterLocation = _appliedFilters!['location'] as String;
+        final filterLocation = _appliedFilters!['location'].toString();
         filtered = filtered
-            .where((listing) =>
-                (listing['location'] as String?)
-                    ?.toLowerCase()
-                    .contains(filterLocation.toLowerCase()) ??
-                false)
+            .where((listing) => (listing['location']?.toString() ?? '')
+                .toLowerCase()
+                .contains(filterLocation.toLowerCase()))
             .toList();
       }
     }
@@ -123,11 +123,21 @@ class _MarketplaceHomeState extends State<MarketplaceHome>
     }
   }
 
-  var _listingsSubscription;
+  StreamSubscription? _listingsSubscription;
+  StreamSubscription? _sponsoredSubscription;
 
   void _setupRealtimeSubscription() async {
     final firestore = _firebaseService.firestore;
-    _listingsSubscription = firestore.collection('listings').snapshots().listen((snapshot) {
+    _listingsSubscription =
+        firestore.collection('listings').snapshots().listen((snapshot) {
+      if (mounted && !_isRefreshing) {
+        _refreshListings();
+      }
+    });
+    _sponsoredSubscription = firestore
+        .collection('sponsored_products')
+        .snapshots()
+        .listen((snapshot) {
       if (mounted && !_isRefreshing) {
         _refreshListings();
       }
@@ -139,62 +149,67 @@ class _MarketplaceHomeState extends State<MarketplaceHome>
     _searchController.dispose();
     _scrollController.dispose();
     _listingsSubscription?.cancel();
+    _sponsoredSubscription?.cancel();
     super.dispose();
   }
 
   Future<void> _loadInitialData() async {
+    setState(() => _isLoading = true);
+
+    // Load each data source independently — if one fails, the rest still work
+    List<Map<String, dynamic>> categories = [];
+    List<Map<String, dynamic>> featured = [];
+    List<Map<String, dynamic>> recent = [];
+    List<Map<String, dynamic>> countries = [];
+    List<Map<String, dynamic>> sponsored = [];
+
     try {
-      setState(() => _isLoading = true);
+      categories = await _marketplaceService.getCategories();
+    } catch (e) {
+      debugPrint('Categories load error: $e');
+    }
 
-      // Load data in parallel for better performance
-      _currentPage = 0;
-      _hasMoreListings = true;
+    try {
+      featured = await _marketplaceService.getFeaturedListings(limit: 10);
+    } catch (e) {
+      debugPrint('Featured listings load error: $e');
+    }
 
-      final results = await Future.wait([
-        _marketplaceService.getCategories(),
-        _marketplaceService.getFeaturedListings(limit: 10),
-        _marketplaceService.getListings(limit: _limit, offset: 0),
-        _locationService.getCountries(),
-        _marketplaceService.getSponsoredListings(limit: 5),
-      ]);
+    try {
+      recent = await _marketplaceService.getListings(limit: _limit, offset: 0);
+    } catch (e) {
+      debugPrint('Recent listings load error: $e');
+    }
 
-      if (mounted) {
-        setState(() {
-          _categories = results[0];
-          _featuredListings = results[1];
-          _recentListings = results[2];
-          _sponsoredListings = results[4];
-          
-          if (_recentListings.length < _limit) {
-            _hasMoreListings = false;
-          }
+    try {
+      countries = await _locationService.getCountries();
+    } catch (e) {
+      debugPrint('Countries load error: $e');
+    }
 
-          // Extract location names from countries data
-          final countries = results[3];
-          _availableLocations =
-              countries.map((country) => '${country['country_name']}').toList();
+    try {
+      sponsored = await _marketplaceService.getSponsoredListings(limit: 5);
+    } catch (e) {
+      debugPrint('Sponsored load error: $e');
+    }
 
-          _isLoading = false;
-        });
-      }
-    } catch (error) {
-      if (mounted) {
-        setState(() => _isLoading = false);
+    if (mounted) {
+      setState(() {
+        _categories = categories;
+        _featuredListings = featured;
+        _recentListings = recent;
+        _sponsoredListings = sponsored;
 
-        // Fallback to basic categories if database fails
-        _categories = [
-          {'id': '1', 'name': 'Electronics', 'icon_url': null},
-          {'id': '2', 'name': 'Fashion', 'icon_url': null},
-          {'id': '3', 'name': 'Vehicles', 'icon_url': null},
-          {'id': '4', 'name': 'Real Estate', 'icon_url': null},
-        ];
+        if (_recentListings.length < _limit) {
+          _hasMoreListings = false;
+        }
 
-        Fluttertoast.showToast(
-          msg: "Failed to load data. Please try again.",
-          toastLength: Toast.LENGTH_SHORT,
-          gravity: ToastGravity.BOTTOM,
-        );
-      }
+        // Extract location names from countries data
+        _availableLocations =
+            countries.map((country) => '${country['country_name']}').toList();
+
+        _isLoading = false;
+      });
     }
   }
 
@@ -210,18 +225,32 @@ class _MarketplaceHomeState extends State<MarketplaceHome>
       _currentPage = 0;
       _hasMoreListings = true;
 
-      // Refresh featured and recent listings
-      final results = await Future.wait([
-        _marketplaceService.getFeaturedListings(limit: 10),
-        _marketplaceService.getListings(limit: _limit, offset: 0),
-        _marketplaceService.getSponsoredListings(limit: 5),
-      ]);
+      List<Map<String, dynamic>> featured = _featuredListings;
+      List<Map<String, dynamic>> recent = _recentListings;
+      List<Map<String, dynamic>> sponsored = _sponsoredListings;
+
+      try {
+        featured = await _marketplaceService.getFeaturedListings(limit: 10);
+      } catch (e) {
+        debugPrint('Refresh featured error: $e');
+      }
+      try {
+        recent =
+            await _marketplaceService.getListings(limit: _limit, offset: 0);
+      } catch (e) {
+        debugPrint('Refresh recent error: $e');
+      }
+      try {
+        sponsored = await _marketplaceService.getSponsoredListings(limit: 5);
+      } catch (e) {
+        debugPrint('Refresh sponsored error: $e');
+      }
 
       if (mounted) {
         setState(() {
-          _featuredListings = results[0];
-          _recentListings = results[1];
-          _sponsoredListings = results[2];
+          _featuredListings = featured;
+          _recentListings = recent;
+          _sponsoredListings = sponsored;
           _isRefreshing = false;
           if (_recentListings.length < _limit) {
             _hasMoreListings = false;
@@ -462,6 +491,71 @@ class _MarketplaceHomeState extends State<MarketplaceHome>
       body: SafeArea(
         child: Column(
           children: [
+            // Top App Bar
+            Padding(
+              padding: EdgeInsets.fromLTRB(4.w, 2.h, 4.w, 1.h),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      CustomIconWidget(
+                        iconName: 'shopping_cart',
+                        color: const Color(0xFF0F7B2D), // Green
+                        size: 32,
+                      ),
+                      SizedBox(width: 2.w),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'PromoHub',
+                            style: AppTheme.lightTheme.textTheme.titleLarge
+                                ?.copyWith(
+                              fontWeight: FontWeight.w900,
+                              color: Colors.black87,
+                            ),
+                          ),
+                          Text(
+                            'Sell More. Buy Better.',
+                            style: AppTheme.lightTheme.textTheme.labelSmall
+                                ?.copyWith(
+                              color: const Color(0xFF0F7B2D),
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  IconButton(
+                    onPressed: () {},
+                    icon: Stack(
+                      children: [
+                        const CustomIconWidget(
+                          iconName: 'notifications_none',
+                          color: Colors.black87,
+                          size: 28,
+                        ),
+                        Positioned(
+                          right: 2,
+                          top: 2,
+                          child: Container(
+                            width: 10,
+                            height: 10,
+                            decoration: const BoxDecoration(
+                              color: Colors.red,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
             // Sticky search bar
             SearchBarWidget(
               searchController: _searchController,
@@ -491,17 +585,27 @@ class _MarketplaceHomeState extends State<MarketplaceHome>
                           ),
 
                           // Category chips - Convert database categories to display format
+                          if (_categories.isNotEmpty)
+                            SliverToBoxAdapter(
+                              child: CategoryChipsWidget(
+                                categories: _categories
+                                    .map((cat) => {
+                                          'name': cat['name']?.toString() ??
+                                              'Other',
+                                          'icon': _getCategoryIcon(
+                                              cat['name']?.toString() ?? ''),
+                                        })
+                                    .toList(),
+                                selectedCategory: _selectedCategory,
+                                onCategorySelected: _onCategorySelected,
+                              ),
+                            ),
+
+                          // Promo Banner
                           SliverToBoxAdapter(
-                            child: CategoryChipsWidget(
-                              categories: _categories
-                                  .map((cat) => {
-                                        'name': cat['name'],
-                                        'icon': _getCategoryIcon(
-                                            cat['name'] as String),
-                                      })
-                                  .toList(),
-                              selectedCategory: _selectedCategory,
-                              onCategorySelected: _onCategorySelected,
+                            child: PromoBannerWidget(
+                              onExploreTap: () => Navigator.pushNamed(
+                                  context, '/search-and-filters'),
                             ),
                           ),
 
@@ -511,27 +615,46 @@ class _MarketplaceHomeState extends State<MarketplaceHome>
                           if (_featuredListings.isNotEmpty)
                             SliverToBoxAdapter(
                               child: FeaturedListingsCarouselWidget(
-                                featuredListings: _featuredListings
-                                    .map((listing) => {
-                                          'id': listing['id'],
-                                          'title': listing['title'],
-                                          'price': '\$${listing['price']}',
-                                          'location': listing['location'] ??
-                                              'Location not set',
-                                          'timePosted': _formatTimeAgo(
-                                              listing['created_at']),
-                                          'image': (listing['images'] as List?)
-                                                      ?.isNotEmpty ==
-                                                  true
-                                              ? listing['images'][0]
-                                              : 'https://images.unsplash.com/photo-1560472355-536de3962603?w=500&h=300&fit=crop',
-                                          'isFavorite':
-                                              listing['isFavorite'] ?? false,
-                                          'category': listing['category_id']
-                                                  ?['name'] ??
-                                              'Other',
-                                        })
-                                    .toList(),
+                                featuredListings:
+                                    _featuredListings.map((listing) {
+                                  // Safely extract category
+                                  String categoryName = 'Other';
+                                  if (listing['category_id'] is Map) {
+                                    categoryName = listing['category_id']
+                                                ['name']
+                                            ?.toString() ??
+                                        'Other';
+                                  } else if (listing['category_id'] != null) {
+                                    categoryName =
+                                        listing['category_id'].toString();
+                                  }
+
+                                  // Safely extract image
+                                  String imageUrl =
+                                      'https://images.unsplash.com/photo-1560472355-536de3962603?w=500&h=300&fit=crop';
+                                  if (listing['images'] is List &&
+                                      (listing['images'] as List).isNotEmpty) {
+                                    imageUrl = (listing['images'] as List)[0]
+                                            ?.toString() ??
+                                        imageUrl;
+                                  }
+
+                                  return {
+                                    'id': listing['id']?.toString() ?? '',
+                                    'title': listing['title']?.toString() ??
+                                        'Unknown',
+                                    'price':
+                                        '\$${listing['price']?.toString() ?? '0'}',
+                                    'location':
+                                        listing['location']?.toString() ??
+                                            'Location not set',
+                                    'timePosted':
+                                        _formatTimeAgo(listing['created_at']),
+                                    'image': imageUrl,
+                                    'isFavorite': listing['isFavorite'] == true,
+                                    'category': categoryName,
+                                  };
+                                }).toList(),
                                 onListingTap: _onListingTap,
                                 onFavoriteTap: _onFavoriteTap,
                               ),
@@ -541,20 +664,27 @@ class _MarketplaceHomeState extends State<MarketplaceHome>
                             SliverToBoxAdapter(child: SizedBox(height: 4.h)),
 
                           // Sponsored Listings Block
-                          if (_sponsoredListings.isNotEmpty && _selectedCategory == null && _appliedFilters == null)
+                          if (_sponsoredListings.isNotEmpty &&
+                              _selectedCategory == null &&
+                              _appliedFilters == null)
                             SliverToBoxAdapter(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Padding(
-                                    padding: EdgeInsets.symmetric(horizontal: 4.w),
+                                    padding:
+                                        EdgeInsets.symmetric(horizontal: 4.w),
                                     child: Row(
                                       children: [
-                                        Icon(Icons.auto_awesome, color: AppTheme.secondaryLight, size: 20),
+                                        Icon(Icons.auto_awesome,
+                                            color: AppTheme.secondaryLight,
+                                            size: 20),
                                         SizedBox(width: 2.w),
                                         Text(
                                           'Sponsored',
-                                          style: AppTheme.lightTheme.textTheme.titleLarge?.copyWith(
+                                          style: AppTheme
+                                              .lightTheme.textTheme.titleLarge
+                                              ?.copyWith(
                                             fontWeight: FontWeight.w800,
                                             color: AppTheme.secondaryLight,
                                           ),
@@ -567,24 +697,62 @@ class _MarketplaceHomeState extends State<MarketplaceHome>
                                     height: 32.h,
                                     child: ListView.builder(
                                       scrollDirection: Axis.horizontal,
-                                      padding: EdgeInsets.symmetric(horizontal: 4.w),
+                                      padding:
+                                          EdgeInsets.symmetric(horizontal: 4.w),
                                       itemCount: _sponsoredListings.length,
                                       itemBuilder: (context, index) {
                                         final ad = _sponsoredListings[index];
-                                        final listing = ad['listing_id'] as Map<String, dynamic>? ?? {};
-                                        if (listing.isEmpty) return const SizedBox();
+                                        final listing = ad['listing_id']
+                                                as Map<String, dynamic>? ??
+                                            {};
+                                        if (listing.isEmpty) {
+                                          return const SizedBox();
+                                        }
+
+                                        // Safely extract category
+                                        String categoryName = 'Other';
+                                        if (listing['category_id'] is Map) {
+                                          categoryName = listing['category_id']
+                                                      ['name']
+                                                  ?.toString() ??
+                                              'Other';
+                                        } else if (listing['category_id'] !=
+                                            null) {
+                                          categoryName =
+                                              listing['category_id'].toString();
+                                        }
+
+                                        // Safely extract image
+                                        String imageUrl =
+                                            'https://images.unsplash.com/photo-1560472355-536de3962603?w=400&h=300&fit=crop';
+                                        if (listing['images'] is List &&
+                                            (listing['images'] as List)
+                                                .isNotEmpty) {
+                                          imageUrl =
+                                              (listing['images'] as List)[0]
+                                                      ?.toString() ??
+                                                  imageUrl;
+                                        }
 
                                         final displayListing = {
-                                          'id': listing['id'],
-                                          'title': listing['title'] ?? 'Unknown',
-                                          'price': 'KSh ${listing['price'] ?? 0}',
-                                          'location': listing['location'] ?? 'Location not set',
-                                          'timePosted': listing['created_at'] != null ? _formatTimeAgo(listing['created_at']) : '',
-                                          'image': (listing['images'] as List?)?.isNotEmpty == true
-                                              ? listing['images'][0]
-                                              : 'https://images.unsplash.com/photo-1560472355-536de3962603?w=400&h=300&fit=crop',
-                                          'isFavorite': listing['isFavorite'] ?? false,
-                                          'category': listing['category_id']?['name'] ?? 'Other',
+                                          'id': listing['id']?.toString() ?? '',
+                                          'title':
+                                              listing['title']?.toString() ??
+                                                  'Unknown',
+                                          'price':
+                                              'KSh ${listing['price']?.toString() ?? '0'}',
+                                          'location':
+                                              listing['location']?.toString() ??
+                                                  'Location not set',
+                                          'timePosted':
+                                              listing['created_at'] != null
+                                                  ? _formatTimeAgo(
+                                                      listing['created_at'])
+                                                  : '',
+                                          'image': imageUrl,
+                                          'isFavorite':
+                                              listing['isFavorite'] == true,
+                                          'category': categoryName,
                                           'isSponsored': true,
                                         };
 
@@ -594,10 +762,12 @@ class _MarketplaceHomeState extends State<MarketplaceHome>
                                           child: ListingCardWidget(
                                             listing: displayListing,
                                             onTap: () {
-                                              _marketplaceService.recordAdClick(ad['id'].toString());
+                                              _marketplaceService.recordAdClick(
+                                                  ad['id'].toString());
                                               _onListingTap(displayListing);
                                             },
-                                            onFavoriteTap: () => _onFavoriteTap(displayListing),
+                                            onFavoriteTap: () =>
+                                                _onFavoriteTap(displayListing),
                                           ),
                                         );
                                       },
@@ -642,24 +812,44 @@ class _MarketplaceHomeState extends State<MarketplaceHome>
                                 delegate: SliverChildBuilderDelegate(
                                   (context, index) {
                                     final listing = filteredListings[index];
+                                    // Safely extract category
+                                    String categoryName = 'Other';
+                                    if (listing['category_id'] is Map) {
+                                      categoryName = listing['category_id']
+                                                  ['name']
+                                              ?.toString() ??
+                                          'Other';
+                                    } else if (listing['category_id'] != null) {
+                                      categoryName =
+                                          listing['category_id'].toString();
+                                    }
+
+                                    // Safely extract image
+                                    String imageUrl =
+                                        'https://images.unsplash.com/photo-1560472355-536de3962603?w=400&h=300&fit=crop';
+                                    if (listing['images'] is List &&
+                                        (listing['images'] as List)
+                                            .isNotEmpty) {
+                                      imageUrl = (listing['images'] as List)[0]
+                                              ?.toString() ??
+                                          imageUrl;
+                                    }
+
                                     final displayListing = {
-                                      'id': listing['id'],
-                                      'title': listing['title'],
-                                      'price': '\$${listing['price']}',
-                                      'location': listing['location'] ??
-                                          'Location not set',
+                                      'id': listing['id']?.toString() ?? '',
+                                      'title': listing['title']?.toString() ??
+                                          'Unknown',
+                                      'price':
+                                          '\$${listing['price']?.toString() ?? '0'}',
+                                      'location':
+                                          listing['location']?.toString() ??
+                                              'Location not set',
                                       'timePosted':
                                           _formatTimeAgo(listing['created_at']),
-                                      'image': (listing['images'] as List?)
-                                                  ?.isNotEmpty ==
-                                              true
-                                          ? listing['images'][0]
-                                          : 'https://images.unsplash.com/photo-1560472355-536de3962603?w=400&h=300&fit=crop',
+                                      'image': imageUrl,
                                       'isFavorite':
-                                          listing['isFavorite'] ?? false,
-                                      'category': listing['category_id']
-                                              ?['name'] ??
-                                          'Other',
+                                          listing['isFavorite'] == true,
+                                      'category': categoryName,
                                     };
 
                                     return ListingCardWidget(
@@ -682,7 +872,8 @@ class _MarketplaceHomeState extends State<MarketplaceHome>
                                 padding: EdgeInsets.symmetric(vertical: 2.h),
                                 child: Center(
                                   child: CircularProgressIndicator(
-                                    color: AppTheme.lightTheme.colorScheme.primary,
+                                    color:
+                                        AppTheme.lightTheme.colorScheme.primary,
                                   ),
                                 ),
                               ),
@@ -810,11 +1001,19 @@ class _MarketplaceHomeState extends State<MarketplaceHome>
     }
   }
 
-  String _formatTimeAgo(String? createdAt) {
+  String _formatTimeAgo(dynamic createdAt) {
     if (createdAt == null) return 'Recently';
 
     try {
-      final DateTime created = DateTime.parse(createdAt);
+      DateTime created;
+      if (createdAt is String) {
+        created = DateTime.parse(createdAt);
+      } else if (createdAt.runtimeType.toString() == 'Timestamp') {
+        created = createdAt.toDate();
+      } else {
+        return 'Recently';
+      }
+
       final DateTime now = DateTime.now();
       final Duration difference = now.difference(created);
 

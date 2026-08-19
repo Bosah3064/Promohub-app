@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../core/app_export.dart';
 import 'settings_auxiliary_pages.dart';
@@ -16,6 +19,7 @@ import './widgets/language_selection_widget.dart';
 import './widgets/settings_item_widget.dart';
 import './widgets/settings_section_widget.dart';
 import './widgets/toggle_settings_item_widget.dart';
+import '../../services/firebase_service.dart';
 
 class SettingsAndAccountManagement extends StatefulWidget {
   const SettingsAndAccountManagement({super.key});
@@ -32,8 +36,7 @@ class _SettingsAndAccountManagementState
     "name": "User",
     "email": "user@example.com",
     "phone": "Not provided",
-    "avatar":
-        "https://images.unsplash.com/photo-1494790108755-2616b612b786?fm=jpg&q=60&w=400&ixlib=rb-4.0.3",
+    "avatar": "",
     "verificationStatus": "Unverified",
     "memberSince": "Today",
     "totalListings": 0,
@@ -62,6 +65,9 @@ class _SettingsAndAccountManagementState
   // Security settings
   bool _twoFactorAuthentication = false;
   bool _biometricLogin = true;
+  bool _isAdmin = false;
+  StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>?
+      _profileSubscription;
 
   // Active sessions mock data
   final List<Map<String, dynamic>> activeSessions = [
@@ -101,25 +107,62 @@ class _SettingsAndAccountManagementState
     super.initState();
     _initSettings();
     _loadUserData();
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId != null) {
+      _profileSubscription = FirebaseService()
+          .firestore
+          .collection('user_profiles')
+          .doc(userId)
+          .snapshots()
+          .listen(_applyProfileSnapshot);
+    }
+  }
+
+  void _applyProfileSnapshot(DocumentSnapshot<Map<String, dynamic>> snapshot) {
+    if (!mounted || !snapshot.exists) return;
+    final data = snapshot.data()!;
+    setState(() {
+      userProfile['name'] = data['full_name'] ?? userProfile['name'];
+      userProfile['phone'] = data['phone'] ?? userProfile['phone'];
+      userProfile['avatar'] = data['avatar_url'] ??
+          FirebaseAuth.instance.currentUser?.photoURL ??
+          '';
+      userProfile['verificationStatus'] =
+          data['is_verified'] == true ? 'Verified' : 'Unverified';
+      _isAdmin = data['role'] == 'admin';
+    });
+  }
+
+  @override
+  void dispose() {
+    _profileSubscription?.cancel();
+    super.dispose();
   }
 
   Future<void> _initSettings() async {
     _prefs = await SharedPreferences.getInstance();
     setState(() {
-      _newMessagesNotification = _prefs.getBool('newMessagesNotification') ?? true;
-      _priceDropsNotification = _prefs.getBool('priceDropsNotification') ?? true;
-      _listingMatchesNotification = _prefs.getBool('listingMatchesNotification') ?? false;
-      _promotionalOffersNotification = _prefs.getBool('promotionalOffersNotification') ?? true;
-      _securityAlertsNotification = _prefs.getBool('securityAlertsNotification') ?? true;
+      _newMessagesNotification =
+          _prefs.getBool('newMessagesNotification') ?? true;
+      _priceDropsNotification =
+          _prefs.getBool('priceDropsNotification') ?? true;
+      _listingMatchesNotification =
+          _prefs.getBool('listingMatchesNotification') ?? false;
+      _promotionalOffersNotification =
+          _prefs.getBool('promotionalOffersNotification') ?? true;
+      _securityAlertsNotification =
+          _prefs.getBool('securityAlertsNotification') ?? true;
       _profileVisibility = _prefs.getBool('profileVisibility') ?? true;
       _contactInfoDisplay = _prefs.getBool('contactInfoDisplay') ?? false;
-      _locationSharingPrecision = _prefs.getBool('locationSharingPrecision') ?? true;
+      _locationSharingPrecision =
+          _prefs.getBool('locationSharingPrecision') ?? true;
       _dataUsagePreferences = _prefs.getBool('dataUsagePreferences') ?? false;
       _darkModeToggle = _prefs.getBool('darkModeToggle') ?? false;
       _selectedLanguage = _prefs.getString('selectedLanguage') ?? "en";
       _selectedCurrency = _prefs.getString('selectedCurrency') ?? "NGN";
       _measurementUnits = _prefs.getString('measurementUnits') ?? "metric";
-      _twoFactorAuthentication = _prefs.getBool('twoFactorAuthentication') ?? false;
+      _twoFactorAuthentication =
+          _prefs.getBool('twoFactorAuthentication') ?? false;
       _biometricLogin = _prefs.getBool('biometricLogin') ?? true;
     });
   }
@@ -139,12 +182,16 @@ class _SettingsAndAccountManagementState
         final email = user.email ?? 'No email';
         final phone = user.phoneNumber ?? 'Not provided';
         final name = user.displayName ?? email.split('@')[0];
-        
+        final profile = await FirebaseService().getCurrentUserProfile();
+
         setState(() {
           userProfile['name'] = name;
           userProfile['email'] = email;
           userProfile['phone'] = phone;
-          userProfile['verificationStatus'] = user.emailVerified ? 'Verified' : 'Unverified';
+          userProfile['avatar'] = profile?['avatar_url'] ?? user.photoURL ?? '';
+          userProfile['verificationStatus'] =
+              user.emailVerified ? 'Verified' : 'Unverified';
+          _isAdmin = profile?['role'] == 'admin';
         });
       }
     } catch (e) {
@@ -198,6 +245,14 @@ class _SettingsAndAccountManagementState
             SettingsSectionWidget(
               title: "Account",
               children: [
+                if (_isAdmin)
+                  SettingsItemWidget(
+                    title: "Manage Adverts",
+                    subtitle: "Publish and manage home page banners",
+                    iconName: 'admin_panel_settings',
+                    onTap: () => Navigator.pushNamed(
+                        context, AppRoutes.adminAdvertisements),
+                  ),
                 SettingsItemWidget(
                   title: "Edit Profile",
                   subtitle: "Update your personal information",
@@ -235,55 +290,50 @@ class _SettingsAndAccountManagementState
                   subtitle: "Get notified about new chat messages",
                   iconName: 'message',
                   value: _newMessagesNotification,
-                  onChanged: (value) =>
-                      setState(() {
-                        _newMessagesNotification = value;
-                        _updateSetting('newMessagesNotification', value);
-                      }),
+                  onChanged: (value) => setState(() {
+                    _newMessagesNotification = value;
+                    _updateSetting('newMessagesNotification', value);
+                  }),
                 ),
                 ToggleSettingsItemWidget(
                   title: "Price Drops",
                   subtitle: "Alerts for price reductions on saved items",
                   iconName: 'trending_down',
                   value: _priceDropsNotification,
-                  onChanged: (value) =>
-                      setState(() {
-                        _priceDropsNotification = value;
-                        _updateSetting('priceDropsNotification', value);
-                      }),
+                  onChanged: (value) => setState(() {
+                    _priceDropsNotification = value;
+                    _updateSetting('priceDropsNotification', value);
+                  }),
                 ),
                 ToggleSettingsItemWidget(
                   title: "Listing Matches",
                   subtitle: "Notifications for items matching your searches",
                   iconName: 'search',
                   value: _listingMatchesNotification,
-                  onChanged: (value) =>
-                      setState(() {
-                        _listingMatchesNotification = value;
-                        _updateSetting('listingMatchesNotification', value);
-                      }),
+                  onChanged: (value) => setState(() {
+                    _listingMatchesNotification = value;
+                    _updateSetting('listingMatchesNotification', value);
+                  }),
                 ),
                 ToggleSettingsItemWidget(
                   title: "Promotional Offers",
                   subtitle: "Special deals and marketplace promotions",
                   iconName: 'local_offer',
                   value: _promotionalOffersNotification,
-                  onChanged: (value) =>
-                      setState(() {
-                        _promotionalOffersNotification = value;
-                        _updateSetting('promotionalOffersNotification', value);
-                      }),
+                  onChanged: (value) => setState(() {
+                    _promotionalOffersNotification = value;
+                    _updateSetting('promotionalOffersNotification', value);
+                  }),
                 ),
                 ToggleSettingsItemWidget(
                   title: "Security Alerts",
                   subtitle: "Important account security notifications",
                   iconName: 'security',
                   value: _securityAlertsNotification,
-                  onChanged: (value) =>
-                      setState(() {
-                        _securityAlertsNotification = value;
-                        _updateSetting('securityAlertsNotification', value);
-                      }),
+                  onChanged: (value) => setState(() {
+                    _securityAlertsNotification = value;
+                    _updateSetting('securityAlertsNotification', value);
+                  }),
                   showDivider: false,
                 ),
               ],
@@ -298,44 +348,40 @@ class _SettingsAndAccountManagementState
                   subtitle: "Make your profile visible to other users",
                   iconName: 'visibility',
                   value: _profileVisibility,
-                  onChanged: (value) =>
-                      setState(() {
-                        _profileVisibility = value;
-                        _updateSetting('profileVisibility', value);
-                      }),
+                  onChanged: (value) => setState(() {
+                    _profileVisibility = value;
+                    _updateSetting('profileVisibility', value);
+                  }),
                 ),
                 ToggleSettingsItemWidget(
                   title: "Contact Information Display",
                   subtitle: "Show contact details on your listings",
                   iconName: 'contact_phone',
                   value: _contactInfoDisplay,
-                  onChanged: (value) =>
-                      setState(() {
-                        _contactInfoDisplay = value;
-                        _updateSetting('contactInfoDisplay', value);
-                      }),
+                  onChanged: (value) => setState(() {
+                    _contactInfoDisplay = value;
+                    _updateSetting('contactInfoDisplay', value);
+                  }),
                 ),
                 ToggleSettingsItemWidget(
                   title: "Location Sharing Precision",
                   subtitle: "Share precise location for nearby searches",
                   iconName: 'location_on',
                   value: _locationSharingPrecision,
-                  onChanged: (value) =>
-                      setState(() {
-                        _locationSharingPrecision = value;
-                        _updateSetting('locationSharingPrecision', value);
-                      }),
+                  onChanged: (value) => setState(() {
+                    _locationSharingPrecision = value;
+                    _updateSetting('locationSharingPrecision', value);
+                  }),
                 ),
                 ToggleSettingsItemWidget(
                   title: "Data Usage Preferences",
                   subtitle: "Allow data collection for app improvement",
                   iconName: 'analytics',
                   value: _dataUsagePreferences,
-                  onChanged: (value) =>
-                      setState(() {
-                        _dataUsagePreferences = value;
-                        _updateSetting('dataUsagePreferences', value);
-                      }),
+                  onChanged: (value) => setState(() {
+                    _dataUsagePreferences = value;
+                    _updateSetting('dataUsagePreferences', value);
+                  }),
                   showDivider: false,
                 ),
               ],
@@ -363,9 +409,9 @@ class _SettingsAndAccountManagementState
                   iconName: 'dark_mode',
                   value: _darkModeToggle,
                   onChanged: (value) => setState(() {
-                        _darkModeToggle = value;
-                        _updateSetting('darkModeToggle', value);
-                      }),
+                    _darkModeToggle = value;
+                    _updateSetting('darkModeToggle', value);
+                  }),
                 ),
                 SettingsItemWidget(
                   title: "Measurement Units",
@@ -400,11 +446,10 @@ class _SettingsAndAccountManagementState
                   subtitle: "Add extra security to your account",
                   iconName: 'security',
                   value: _twoFactorAuthentication,
-                  onChanged: (value) =>
-                      setState(() {
-                        _twoFactorAuthentication = value;
-                        _updateSetting('twoFactorAuthentication', value);
-                      }),
+                  onChanged: (value) => setState(() {
+                    _twoFactorAuthentication = value;
+                    _updateSetting('twoFactorAuthentication', value);
+                  }),
                 ),
                 ToggleSettingsItemWidget(
                   title: "Biometric Login",
@@ -412,9 +457,9 @@ class _SettingsAndAccountManagementState
                   iconName: 'fingerprint',
                   value: _biometricLogin,
                   onChanged: (value) => setState(() {
-                        _biometricLogin = value;
-                        _updateSetting('biometricLogin', value);
-                      }),
+                    _biometricLogin = value;
+                    _updateSetting('biometricLogin', value);
+                  }),
                 ),
                 SettingsItemWidget(
                   title: "Privacy Policy",
@@ -592,7 +637,8 @@ class _SettingsAndAccountManagementState
       MaterialPageRoute(
         builder: (context) => const LegalDocumentScreen(
           title: "Privacy Policy",
-          content: "PromoHub Privacy Policy\n\n1. Information We Collect\nWe collect information you provide directly to us, such as when you create or modify your account, contact customer support, or otherwise communicate with us.\n\n2. Use of Information\nWe use the information we collect to provide, maintain, and improve our services, to process transactions, and to send you related information.\n\n3. Sharing of Information\nWe may share the information we collect with vendors, consultants, and other service providers who need access to such information to carry out work on our behalf.\n\n4. Security\nWe take reasonable measures to help protect information about you from loss, theft, misuse and unauthorized access, disclosure, alteration and destruction.",
+          content:
+              "PromoHub Privacy Policy\n\n1. Information We Collect\nWe collect information you provide directly to us, such as when you create or modify your account, contact customer support, or otherwise communicate with us.\n\n2. Use of Information\nWe use the information we collect to provide, maintain, and improve our services, to process transactions, and to send you related information.\n\n3. Sharing of Information\nWe may share the information we collect with vendors, consultants, and other service providers who need access to such information to carry out work on our behalf.\n\n4. Security\nWe take reasonable measures to help protect information about you from loss, theft, misuse and unauthorized access, disclosure, alteration and destruction.",
         ),
       ),
     );
@@ -622,7 +668,8 @@ class _SettingsAndAccountManagementState
       MaterialPageRoute(
         builder: (context) => const LegalDocumentScreen(
           title: "Terms of Service",
-          content: "PromoHub Terms of Service\n\n1. Acceptance of Terms\nBy accessing or using our services, you agree to be bound by these Terms.\n\n2. Description of Services\nPromoHub is a marketplace connecting buyers and sellers.\n\n3. User Conduct\nYou agree not to use the services for any unlawful purpose or in any way that interrupts, damages, impairs or renders the services less efficient.\n\n4. Account Registration\nYou must register for an account to access certain features. You are responsible for maintaining the confidentiality of your account credentials.\n\n5. Buyer and Seller Obligations\nSellers must accurately describe their items. Buyers must pay for items they purchase.",
+          content:
+              "PromoHub Terms of Service\n\n1. Acceptance of Terms\nBy accessing or using our services, you agree to be bound by these Terms.\n\n2. Description of Services\nPromoHub is a marketplace connecting buyers and sellers.\n\n3. User Conduct\nYou agree not to use the services for any unlawful purpose or in any way that interrupts, damages, impairs or renders the services less efficient.\n\n4. Account Registration\nYou must register for an account to access certain features. You are responsible for maintaining the confidentiality of your account credentials.\n\n5. Buyer and Seller Obligations\nSellers must accurately describe their items. Buyers must pay for items they purchase.",
         ),
       ),
     );
@@ -634,7 +681,8 @@ class _SettingsAndAccountManagementState
       MaterialPageRoute(
         builder: (context) => const LegalDocumentScreen(
           title: "Legal Information",
-          content: "PromoHub Legal Information\n\nCopyright © 2025 PromoHub Inc. All rights reserved.\n\nLicenses\nThis application uses open source software. Licenses for these packages can be found in the application directory.\n\nTrademarks\nPromoHub and the PromoHub logo are trademarks of PromoHub Inc.",
+          content:
+              "PromoHub Legal Information\n\nCopyright © 2025 PromoHub Inc. All rights reserved.\n\nLicenses\nThis application uses open source software. Licenses for these packages can be found in the application directory.\n\nTrademarks\nPromoHub and the PromoHub logo are trademarks of PromoHub Inc.",
         ),
       ),
     );
@@ -698,9 +746,9 @@ class _SettingsAndAccountManagementState
                 currentLanguage: _selectedLanguage,
                 onLanguageChanged: (language) {
                   setState(() {
-                      _selectedLanguage = language;
-                      _updateSetting('selectedLanguage', language);
-                    });
+                    _selectedLanguage = language;
+                    _updateSetting('selectedLanguage', language);
+                  });
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
@@ -754,9 +802,9 @@ class _SettingsAndAccountManagementState
                 currentCurrency: _selectedCurrency,
                 onCurrencyChanged: (currency) {
                   setState(() {
-                      _selectedCurrency = currency;
-                      _updateSetting('selectedCurrency', currency);
-                    });
+                    _selectedCurrency = currency;
+                    _updateSetting('selectedCurrency', currency);
+                  });
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
@@ -953,7 +1001,7 @@ class _SettingsAndAccountManagementState
       builder: (context) => AlertDialog(
         title: Text("Need Help?"),
         content: Text(
-            "Contact our support team at support@promohub.com or use the live chat feature for immediate assistance."),
+            "Contact our support team at support@PromoHub.com or use the live chat feature for immediate assistance."),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),

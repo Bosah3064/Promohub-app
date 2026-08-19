@@ -57,11 +57,12 @@ class _ListingDetailState extends State<ListingDetail> {
               "location": listing['location'] ?? '',
               "postedDate": 'Recently',
               "viewCount": listing['views'] ?? 0,
-              "listingId": listing['id'],
-              "images": (listing['images'] as List?)?.cast<String>() ??
-                  [
-                    "https://images.pexels.com/photos/788946/pexels-photo-788946.jpeg?auto=compress&cs=tinysrgb&w=800",
-                  ],
+              "listingId": listing['id']?.toString() ?? '',
+              "images": (listing['images'] is List && (listing['images'] as List).isNotEmpty)
+                  ? (listing['images'] as List).map((e) => e.toString()).toList()
+                  : [
+                      "https://images.pexels.com/photos/788946/pexels-photo-788946.jpeg?auto=compress&cs=tinysrgb&w=800",
+                    ],
             };
             _seller = {
               "id": sellerData['id'] ?? '',
@@ -107,17 +108,18 @@ class _ListingDetailState extends State<ListingDetail> {
               .where((l) => l['id'] != _currentListing['id'])
               .take(3)
               .map((l) {
+            String imageUrl = "https://images.pexels.com/photos/788946/pexels-photo-788946.jpeg?auto=compress&cs=tinysrgb&w=400";
+            if (l['images'] is List && (l['images'] as List).isNotEmpty) {
+              imageUrl = (l['images'] as List)[0]?.toString() ?? imageUrl;
+            }
+
             return {
-              "id": l['id'],
-              "title": l['title'],
-              "price": 'KSh ${l['price']}',
-              "location": l['location'] ?? '',
+              "id": l['id']?.toString() ?? '',
+              "title": l['title']?.toString() ?? 'Unknown',
+              "price": 'KSh ${l['price']?.toString() ?? '0'}',
+              "location": l['location']?.toString() ?? '',
               "postedDate": "Recently",
-              "images": (l['images'] as List?)?.isNotEmpty == true
-                  ? [l['images'][0]]
-                  : [
-                      "https://images.pexels.com/photos/788946/pexels-photo-788946.jpeg?auto=compress&cs=tinysrgb&w=400"
-                    ],
+              "images": [imageUrl],
             };
           }).toList();
         });

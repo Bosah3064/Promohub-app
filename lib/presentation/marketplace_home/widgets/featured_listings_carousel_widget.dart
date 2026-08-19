@@ -3,7 +3,7 @@ import 'package:sizer/sizer.dart';
 
 import '../../../core/app_export.dart';
 
-class FeaturedListingsCarouselWidget extends StatefulWidget {
+class FeaturedListingsCarouselWidget extends StatelessWidget {
   final List<Map<String, dynamic>> featuredListings;
   final Function(Map<String, dynamic>) onListingTap;
   final Function(Map<String, dynamic>) onFavoriteTap;
@@ -16,45 +16,9 @@ class FeaturedListingsCarouselWidget extends StatefulWidget {
   });
 
   @override
-  State<FeaturedListingsCarouselWidget> createState() =>
-      _FeaturedListingsCarouselWidgetState();
-}
-
-class _FeaturedListingsCarouselWidgetState
-    extends State<FeaturedListingsCarouselWidget> {
-  final PageController _pageController = PageController(viewportFraction: 0.85);
-  int _currentIndex = 0;
-
-  @override
-  void initState() {
-    super.initState();
-    _startAutoScroll();
-  }
-
-  void _startAutoScroll() {
-    Future.delayed(Duration(seconds: 3), () {
-      if (mounted && widget.featuredListings.isNotEmpty) {
-        final nextIndex = (_currentIndex + 1) % widget.featuredListings.length;
-        _pageController.animateToPage(
-          nextIndex,
-          duration: Duration(milliseconds: 300),
-          curve: Curves.easeInOut,
-        );
-        _startAutoScroll();
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _pageController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    if (widget.featuredListings.isEmpty) {
-      return SizedBox.shrink();
+    if (featuredListings.isEmpty) {
+      return const SizedBox.shrink();
     }
 
     return Column(
@@ -62,50 +26,38 @@ class _FeaturedListingsCarouselWidgetState
       children: [
         Padding(
           padding: EdgeInsets.symmetric(horizontal: 4.w),
-          child: Text(
-            'Featured Listings',
-            style: AppTheme.lightTheme.textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ),
-        SizedBox(height: 2.h),
-        SizedBox(
-          height: 25.h,
-          child: PageView.builder(
-            controller: _pageController,
-            onPageChanged: (index) {
-              setState(() {
-                _currentIndex = index;
-              });
-            },
-            itemCount: widget.featuredListings.length,
-            itemBuilder: (context, index) {
-              final listing = widget.featuredListings[index];
-              return Container(
-                margin: EdgeInsets.only(right: 3.w),
-                child: _buildFeaturedCard(listing),
-              );
-            },
-          ),
-        ),
-        SizedBox(height: 1.h),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: List.generate(
-            widget.featuredListings.length,
-            (index) => Container(
-              width: _currentIndex == index ? 8 : 6,
-              height: _currentIndex == index ? 8 : 6,
-              margin: EdgeInsets.symmetric(horizontal: 2),
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: _currentIndex == index
-                    ? AppTheme.lightTheme.colorScheme.primary
-                    : AppTheme.lightTheme.colorScheme.outline
-                        .withValues(alpha: 0.4),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Featured Deals',
+                style: AppTheme.lightTheme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 18.0,
+                ),
               ),
-            ),
+              Text(
+                'See all',
+                style: AppTheme.lightTheme.textTheme.titleSmall?.copyWith(
+                  color: const Color(0xFF0F7B2D), // Green text
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+        SizedBox(height: 1.5.h),
+        SizedBox(
+          height: 22.h,
+          child: ListView.separated(
+            padding: EdgeInsets.symmetric(horizontal: 4.w),
+            scrollDirection: Axis.horizontal,
+            itemCount: featuredListings.length,
+            separatorBuilder: (context, index) => SizedBox(width: 4.w),
+            itemBuilder: (context, index) {
+              final listing = featuredListings[index];
+              return _buildFeaturedCard(listing);
+            },
           ),
         ),
       ],
@@ -113,18 +65,23 @@ class _FeaturedListingsCarouselWidgetState
   }
 
   Widget _buildFeaturedCard(Map<String, dynamic> listing) {
+    // Generate a mock old price that is 20% higher to show a discount
+    final priceStr = listing['price'].toString().replaceAll(RegExp(r'[^0-9.]'), '');
+    final priceNum = double.tryParse(priceStr) ?? 0.0;
+    final oldPrice = priceNum > 0 ? (priceNum * 1.2).toStringAsFixed(0) : '0';
+
     return GestureDetector(
-      onTap: () => widget.onListingTap(listing),
+      onTap: () => onListingTap(listing),
       child: Container(
+        width: 35.w,
         decoration: BoxDecoration(
-          color: AppTheme.lightTheme.colorScheme.surface,
-          borderRadius: BorderRadius.circular(16),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color:
-                  AppTheme.lightTheme.colorScheme.shadow.withValues(alpha: 0.1),
-              blurRadius: 8,
-              offset: Offset(0, 2),
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
             ),
           ],
         ),
@@ -132,12 +89,11 @@ class _FeaturedListingsCarouselWidgetState
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(
-              flex: 3,
+              flex: 5,
               child: Stack(
                 children: [
                   ClipRRect(
-                    borderRadius:
-                        BorderRadius.vertical(top: Radius.circular(16)),
+                    borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
                     child: CustomImageWidget(
                       imageUrl: listing['image'] as String,
                       width: double.infinity,
@@ -146,46 +102,20 @@ class _FeaturedListingsCarouselWidgetState
                     ),
                   ),
                   Positioned(
-                    top: 2.w,
-                    right: 2.w,
-                    child: GestureDetector(
-                      onTap: () => widget.onFavoriteTap(listing),
-                      child: Container(
-                        padding: EdgeInsets.all(2.w),
-                        decoration: BoxDecoration(
-                          color: AppTheme.lightTheme.colorScheme.surface
-                              .withValues(alpha: 0.9),
-                          shape: BoxShape.circle,
-                        ),
-                        child: CustomIconWidget(
-                          iconName: (listing['isFavorite'] as bool? ?? false)
-                              ? 'favorite'
-                              : 'favorite_border',
-                          color: (listing['isFavorite'] as bool? ?? false)
-                              ? Colors.red
-                              : AppTheme
-                                  .lightTheme.colorScheme.onSurfaceVariant,
-                          size: 20,
-                        ),
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    top: 2.w,
-                    left: 2.w,
+                    top: 8,
+                    left: 8,
                     child: Container(
-                      padding:
-                          EdgeInsets.symmetric(horizontal: 2.w, vertical: 1.w),
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
-                        color: AppTheme.lightTheme.colorScheme.secondary,
-                        borderRadius: BorderRadius.circular(8),
+                        color: Colors.red.withValues(alpha: 0.9),
+                        borderRadius: BorderRadius.circular(4),
                       ),
-                      child: Text(
-                        'FEATURED',
-                        style:
-                            AppTheme.lightTheme.textTheme.labelSmall?.copyWith(
-                          color: AppTheme.lightTheme.colorScheme.onSecondary,
-                          fontWeight: FontWeight.w700,
+                      child: const Text(
+                        '-20%',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
                     ),
@@ -194,52 +124,40 @@ class _FeaturedListingsCarouselWidgetState
               ),
             ),
             Expanded(
-              flex: 2,
+              flex: 4,
               child: Padding(
-                padding: EdgeInsets.all(3.w),
+                padding: const EdgeInsets.all(8.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       listing['title'] as String,
-                      style:
-                          AppTheme.lightTheme.textTheme.titleMedium?.copyWith(
+                      style: const TextStyle(
+                        fontSize: 12.0,
                         fontWeight: FontWeight.w600,
+                        color: Colors.black87,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    SizedBox(height: 1.h),
+                    const SizedBox(height: 4),
                     Text(
                       listing['price'] as String,
-                      style: AppTheme.lightTheme.textTheme.titleLarge?.copyWith(
-                        color: AppTheme.lightTheme.colorScheme.primary,
-                        fontWeight: FontWeight.w700,
+                      style: const TextStyle(
+                        fontSize: 14.0,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.black,
                       ),
                     ),
-                    Spacer(),
-                    Row(
-                      children: [
-                        CustomIconWidget(
-                          iconName: 'location_on',
-                          color:
-                              AppTheme.lightTheme.colorScheme.onSurfaceVariant,
-                          size: 14,
-                        ),
-                        SizedBox(width: 1.w),
-                        Expanded(
-                          child: Text(
-                            listing['location'] as String,
-                            style: AppTheme.lightTheme.textTheme.bodySmall,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        Text(
-                          listing['timePosted'] as String,
-                          style: AppTheme.lightTheme.textTheme.bodySmall,
-                        ),
-                      ],
+                    const SizedBox(height: 2),
+                    Text(
+                      'KSh $oldPrice',
+                      style: TextStyle(
+                        fontSize: 10.0,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.grey[500],
+                        decoration: TextDecoration.lineThrough,
+                      ),
                     ),
                   ],
                 ),

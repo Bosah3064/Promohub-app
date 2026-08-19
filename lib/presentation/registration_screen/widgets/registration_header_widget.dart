@@ -35,7 +35,7 @@ class RegistrationHeaderWidget extends StatelessWidget {
                       child: Text(
                         'Create Account',
                         style: TextStyle(
-                          fontSize: 24.sp,
+                          fontSize: 28.0,
                           color: Colors.white,
                           fontWeight: FontWeight.w800,
                         ),
@@ -79,7 +79,7 @@ class RegistrationHeaderWidget extends StatelessWidget {
                 child: Text(
                   'Join PromoHub and start buying, selling, and trading with confidence in Africa\'s trusted marketplace.',
                   style: TextStyle(
-                    fontSize: 12.sp,
+                    fontSize: 14.0,
                     color: AppTheme.textSecondaryLight,
                     height: 1.5,
                   ),

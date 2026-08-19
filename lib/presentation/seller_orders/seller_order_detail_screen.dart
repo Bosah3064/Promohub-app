@@ -70,9 +70,9 @@ class _SellerOrderDetailScreenState extends State<SellerOrderDetailScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Update Order Status', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12.sp)),
+                  Text('Update Order Status', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14.0)),
                   SizedBox(height: 1.h),
-                  Text('Notify the buyer about their order progress.', style: TextStyle(color: AppTheme.textSecondaryLight, fontSize: 10.sp)),
+                  Text('Notify the buyer about their order progress.', style: TextStyle(color: AppTheme.textSecondaryLight, fontSize: 12.0)),
                   SizedBox(height: 2.h),
                   if (_isUpdating)
                     const Center(child: CircularProgressIndicator())
@@ -92,7 +92,7 @@ class _SellerOrderDetailScreenState extends State<SellerOrderDetailScreen> {
             SizedBox(height: 3.h),
 
             // Buyer Info
-            Text('Buyer Information', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13.sp)),
+            Text('Buyer Information', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15.0)),
             SizedBox(height: 1.5.h),
             Container(
               padding: EdgeInsets.all(4.w),
@@ -113,7 +113,7 @@ class _SellerOrderDetailScreenState extends State<SellerOrderDetailScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(buyer['full_name'] ?? 'Guest Buyer', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12.sp)),
+                        Text(buyer['full_name'] ?? 'Guest Buyer', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14.0)),
                         SizedBox(height: 0.5.h),
                         Row(
                           children: [
@@ -137,7 +137,7 @@ class _SellerOrderDetailScreenState extends State<SellerOrderDetailScreen> {
             SizedBox(height: 3.h),
 
             // Delivery Details
-            Text('Delivery Details', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13.sp)),
+            Text('Delivery Details', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15.0)),
             SizedBox(height: 1.5.h),
             Container(
               padding: EdgeInsets.all(4.w),
@@ -151,15 +151,15 @@ class _SellerOrderDetailScreenState extends State<SellerOrderDetailScreen> {
                 children: [
                   Text('Method: ${_order['delivery_method'] == 'pickup' ? 'Pickup Station' : 'Doorstep'}', style: TextStyle(fontWeight: FontWeight.w600)),
                   SizedBox(height: 1.h),
-                  Text('Address:', style: TextStyle(color: AppTheme.textSecondaryLight, fontSize: 10.sp)),
-                  Text(_order['delivery_address'] ?? 'No address provided', style: TextStyle(fontSize: 11.sp)),
+                  Text('Address:', style: TextStyle(color: AppTheme.textSecondaryLight, fontSize: 12.0)),
+                  Text(_order['delivery_address'] ?? 'No address provided', style: TextStyle(fontSize: 13.0)),
                 ],
               ),
             ),
             SizedBox(height: 3.h),
 
             // Order Items
-            Text('Ordered Items', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13.sp)),
+            Text('Ordered Items', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15.0)),
             SizedBox(height: 1.5.h),
             ListView.builder(
               shrinkWrap: true,
@@ -195,7 +195,7 @@ class _SellerOrderDetailScreenState extends State<SellerOrderDetailScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(listing['title'] ?? 'Unknown Item', style: TextStyle(fontWeight: FontWeight.w600), maxLines: 2),
-                            Text('Qty: ${item['quantity']}', style: TextStyle(color: AppTheme.textSecondaryLight, fontSize: 10.sp)),
+                            Text('Qty: ${item['quantity']}', style: TextStyle(color: AppTheme.textSecondaryLight, fontSize: 12.0)),
                           ],
                         ),
                       ),

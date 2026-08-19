@@ -128,10 +128,10 @@ class _AuthenticationScreenState extends State<AuthenticationScreen>
     final password = credentials['password'] ?? '';
 
     // Mock credentials for testing
-    if (email == 'user@promohub.com' && password == 'password123') {
+    if (email == 'user@PromoHub.com' && password == 'password123') {
       // Success - navigate to home screen
       Navigator.pushReplacementNamed(context, '/home-screen');
-    } else if (email == 'admin@promohub.com' && password == 'admin123') {
+    } else if (email == 'admin@PromoHub.com' && password == 'admin123') {
       // Admin success - navigate to home screen
       Navigator.pushReplacementNamed(context, '/home-screen');
     } else {
@@ -139,7 +139,7 @@ class _AuthenticationScreenState extends State<AuthenticationScreen>
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content:
-              Text('Invalid credentials. Try user@promohub.com / password123'),
+              Text('Invalid credentials. Try user@PromoHub.com / password123'),
           backgroundColor: AppTheme.lightTheme.colorScheme.error,
         ),
       );
