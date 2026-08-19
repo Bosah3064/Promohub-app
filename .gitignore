@@ -12,6 +12,11 @@ env.json
 *.jks
 key.properties
 
+# Firebase Admin credentials
+firebase/serviceAccountKey.json
+firebase/*serviceAccount*.json
+firebase/*adminsdk*.json
+
 # IDE
 .vscode/settings.json
 .idea/
