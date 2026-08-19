@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
 
 import '../../core/app_export.dart';
+import '../../services/marketplace_service.dart';
 import './widgets/category_chip_widget.dart';
 import './widgets/featured_listing_card_widget.dart';
 import './widgets/nearby_deal_card_widget.dart';
@@ -20,150 +21,63 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   int _currentBottomNavIndex = 0;
   int _currentFeaturedIndex = 0;
 
-  // Mock data for featured listings
-  final List<Map<String, dynamic>> featuredListings = [
-    {
-      "id": 1,
-      "title": "iPhone 14 Pro Max - Like New",
-      "price": "₦850,000",
-      "image":
-          "https://images.pexels.com/photos/788946/pexels-photo-788946.jpeg",
-      "location": "Victoria Island, Lagos",
-      "distance": "2.5 km",
-      "isVip": true,
-      "sellerRating": 4.8,
-      "isFavorite": false,
-    },
-    {
-      "id": 2,
-      "title": "MacBook Pro M2 - Excellent Condition",
-      "price": "₦1,200,000",
-      "image": "https://images.pexels.com/photos/18105/pexels-photo.jpg",
-      "location": "Ikeja, Lagos",
-      "distance": "5.2 km",
-      "isVip": true,
-      "sellerRating": 4.9,
-      "isFavorite": true,
-    },
-    {
-      "id": 3,
-      "title": "Toyota Camry 2020 - Low Mileage",
-      "price": "₦15,500,000",
-      "image":
-          "https://images.pexels.com/photos/116675/pexels-photo-116675.jpeg",
-      "location": "Lekki, Lagos",
-      "distance": "8.1 km",
-      "isVip": true,
-      "sellerRating": 4.7,
-      "isFavorite": false,
-    },
-  ];
+  // Dynamic data lists
+  List<Map<String, dynamic>> featuredListings = [];
+  List<Map<String, dynamic>> nearbyDeals = [];
+  List<Map<String, dynamic>> categories = [];
+  List<Map<String, dynamic>> recentListings = [];
 
-  // Mock data for nearby deals
-  final List<Map<String, dynamic>> nearbyDeals = [
-    {
-      "id": 4,
-      "title": "Samsung Galaxy S23",
-      "price": "₦450,000",
-      "image":
-          "https://images.pexels.com/photos/699122/pexels-photo-699122.jpeg",
-      "location": "Surulere, Lagos",
-      "distance": "3.2 km",
-      "sellerRating": 4.6,
-      "isFavorite": false,
-    },
-    {
-      "id": 5,
-      "title": "Dell XPS 13 Laptop",
-      "price": "₦680,000",
-      "image": "https://images.pexels.com/photos/18105/pexels-photo.jpg",
-      "location": "Yaba, Lagos",
-      "distance": "4.8 km",
-      "sellerRating": 4.5,
-      "isFavorite": true,
-    },
-    {
-      "id": 6,
-      "title": "Nike Air Jordan 1",
-      "price": "₦85,000",
-      "image":
-          "https://images.pexels.com/photos/2529148/pexels-photo-2529148.jpeg",
-      "location": "Ikoyi, Lagos",
-      "distance": "1.9 km",
-      "sellerRating": 4.8,
-      "isFavorite": false,
-    },
-    {
-      "id": 7,
-      "title": "PlayStation 5 Console",
-      "price": "₦320,000",
-      "image":
-          "https://images.pexels.com/photos/275033/pexels-photo-275033.jpeg",
-      "location": "Ajah, Lagos",
-      "distance": "12.5 km",
-      "sellerRating": 4.7,
-      "isFavorite": false,
-    },
-  ];
-
-  // Mock data for categories
-  final List<Map<String, dynamic>> categories = [
-    {"name": "Electronics", "icon": "devices", "isActive": false},
-    {"name": "Vehicles", "icon": "directions_car", "isActive": false},
-    {"name": "Fashion", "icon": "checkroom", "isActive": false},
-    {"name": "Real Estate", "icon": "home", "isActive": false},
-    {"name": "Jobs", "icon": "work", "isActive": false},
-    {"name": "Services", "icon": "build", "isActive": false},
-  ];
-
-  // Mock data for recent listings
-  final List<Map<String, dynamic>> recentListings = [
-    {
-      "id": 8,
-      "title": "Vintage Leather Sofa Set",
-      "price": "₦180,000",
-      "image":
-          "https://images.pexels.com/photos/1350789/pexels-photo-1350789.jpeg",
-      "location": "Gbagada, Lagos",
-      "distance": "7.3 km",
-      "sellerRating": 4.4,
-      "isFavorite": false,
-      "timePosted": "2 hours ago",
-    },
-    {
-      "id": 9,
-      "title": "Canon EOS R5 Camera",
-      "price": "₦1,850,000",
-      "image": "https://images.pexels.com/photos/90946/pexels-photo-90946.jpeg",
-      "location": "Maryland, Lagos",
-      "distance": "6.1 km",
-      "sellerRating": 4.9,
-      "isFavorite": true,
-      "timePosted": "4 hours ago",
-    },
-    {
-      "id": 10,
-      "title": "Mountain Bike - Trek",
-      "price": "₦125,000",
-      "image":
-          "https://images.pexels.com/photos/100582/pexels-photo-100582.jpeg",
-      "location": "Festac, Lagos",
-      "distance": "15.2 km",
-      "sellerRating": 4.3,
-      "isFavorite": false,
-      "timePosted": "6 hours ago",
-    },
-  ];
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
+    _loadData();
     _startFeaturedAutoScroll();
+  }
+
+  Future<void> _loadData() async {
+    setState(() => _isLoading = true);
+    try {
+      final marketplaceService = MarketplaceService();
+      
+      final results = await Future.wait([
+        marketplaceService.getFeaturedListings(limit: 5),
+        marketplaceService.getListings(limit: 4),
+        marketplaceService.getCategories(),
+        marketplaceService.getListings(limit: 3),
+      ]);
+      
+      if (mounted) {
+        setState(() {
+          featuredListings = List<Map<String, dynamic>>.from(results[0]);
+          nearbyDeals = List<Map<String, dynamic>>.from(results[1]);
+          categories = List<Map<String, dynamic>>.from(results[2]);
+          recentListings = List<Map<String, dynamic>>.from(results[3]);
+          
+          // Fallback if categories are empty
+          if (categories.isEmpty) {
+            categories = [
+              {"name": "Electronics", "icon": "devices", "isActive": false},
+              {"name": "Vehicles", "icon": "directions_car", "isActive": false},
+              {"name": "Fashion", "icon": "checkroom", "isActive": false},
+              {"name": "Real Estate", "icon": "home", "isActive": false},
+            ];
+          }
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        // We could show an error, but let's just leave them empty for now
+      }
+    }
   }
 
   void _startFeaturedAutoScroll() {
     Future.delayed(const Duration(seconds: 5), () {
-      if (mounted && _featuredPageController.hasClients) {
+      if (mounted && _featuredPageController.hasClients && featuredListings.isNotEmpty) {
         final nextPage = (_currentFeaturedIndex + 1) % featuredListings.length;
         _featuredPageController.animateToPage(
           nextPage,
@@ -176,12 +90,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   Future<void> _handleRefresh() async {
-    setState(() {});
-    // Simulate network call
-    await Future.delayed(const Duration(seconds: 2));
-    if (mounted) {
-      setState(() {});
-    }
+    await _loadData();
   }
 
   void _onBottomNavTap(int index) {
@@ -231,9 +140,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         child: RefreshIndicator(
           onRefresh: _handleRefresh,
           color: AppTheme.lightTheme.primaryColor,
-          child: CustomScrollView(
-            controller: _scrollController,
-            slivers: [
+          child: _isLoading
+              ? Center(
+                  child: CircularProgressIndicator(
+                    color: AppTheme.lightTheme.primaryColor,
+                  ),
+                )
+              : CustomScrollView(
+                  controller: _scrollController,
+                  slivers: [
               // Sticky Header
               SliverAppBar(
                 floating: true,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:sizer/sizer.dart';
 
 import '../../../core/app_export.dart';
@@ -54,7 +55,7 @@ class SocialSignupWidget extends StatelessWidget {
             _buildSocialButton(
               context: context,
               provider: 'Google',
-              icon: 'g_translate',
+              svgPath: 'assets/icons/google_logo.svg',
               backgroundColor: Colors.white,
               textColor: Colors.black87,
               borderColor: Colors.grey.shade300,
@@ -66,7 +67,7 @@ class SocialSignupWidget extends StatelessWidget {
             _buildSocialButton(
               context: context,
               provider: 'Facebook',
-              icon: 'facebook',
+              svgPath: 'assets/icons/facebook_logo.svg',
               backgroundColor: const Color(0xFF1877F2),
               textColor: Colors.white,
               borderColor: const Color(0xFF1877F2),
@@ -74,11 +75,11 @@ class SocialSignupWidget extends StatelessWidget {
             ),
             SizedBox(height: 2.h),
 
-            // Apple Sign Up (iOS only, but shown for demo)
+            // Apple Sign Up
             _buildSocialButton(
               context: context,
               provider: 'Apple',
-              icon: 'apple',
+              svgPath: 'assets/icons/apple_logo.svg',
               backgroundColor: Colors.black,
               textColor: Colors.white,
               borderColor: Colors.black,
@@ -93,7 +94,7 @@ class SocialSignupWidget extends StatelessWidget {
   Widget _buildSocialButton({
     required BuildContext context,
     required String provider,
-    required String icon,
+    required String svgPath,
     required Color backgroundColor,
     required Color textColor,
     required Color borderColor,
@@ -115,17 +116,21 @@ class SocialSignupWidget extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            CustomIconWidget(
-              iconName: icon,
-              color: textColor,
-              size: 20,
+            SizedBox(
+              width: 22,
+              height: 22,
+              child: SvgPicture.asset(
+                svgPath,
+                width: 22,
+                height: 22,
+              ),
             ),
             SizedBox(width: 3.w),
             Text(
               'Continue with $provider',
               style: TextStyle(
-                fontSize: 16.sp,
-                fontWeight: FontWeight.w500,
+                fontSize: 14.sp,
+                fontWeight: FontWeight.w600,
                 color: textColor,
               ),
             ),

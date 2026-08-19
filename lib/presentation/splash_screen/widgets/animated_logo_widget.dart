@@ -88,31 +88,16 @@ class _AnimatedLogoWidgetState extends State<AnimatedLogoWidget>
                   ),
                 ],
               ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  CustomIconWidget(
-                    iconName: 'storefront',
-                    color: AppTheme.lightTheme.colorScheme.primary,
-                    size: 12.w,
+              child: Center(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(16.0),
+                  child: Image.asset(
+                    'assets/images/logo.png',
+                    width: 25.w,
+                    height: 25.w,
+                    fit: BoxFit.cover,
                   ),
-                  SizedBox(height: 1.h),
-                  Text(
-                    'PromoHub',
-                    style: AppTheme.lightTheme.textTheme.titleLarge?.copyWith(
-                      color: AppTheme.lightTheme.colorScheme.primary,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 16.sp,
-                    ),
-                  ),
-                  Text(
-                    'African Marketplace',
-                    style: AppTheme.lightTheme.textTheme.bodySmall?.copyWith(
-                      color: AppTheme.lightTheme.colorScheme.secondary,
-                      fontSize: 10.sp,
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
           ),

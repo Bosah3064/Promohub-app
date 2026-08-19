@@ -2097,7 +2097,7 @@ class _CategorySelectorState extends State<CategorySelector> {
       );
     } else {
       return DropdownButtonFormField<String>(
-        value: currentValue.isNotEmpty ? currentValue : null,
+        initialValue: currentValue.isNotEmpty ? currentValue : null,
         decoration: InputDecoration(
           border: OutlineInputBorder(),
           hintText: 'Select ${property['name']}',

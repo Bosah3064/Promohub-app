@@ -72,7 +72,7 @@ class _LocationSetupScreenState extends State<LocationSetupScreen> {
     final cityList = _getCitiesForRegion(_selectedCountry, _selectedRegion);
 
     return Scaffold(
-      backgroundColor: AppTheme.lightTheme.scaffoldBackgroundColor,
+      backgroundColor: AppTheme.backgroundLight,
       body: SafeArea(
         child: Column(
           children: [

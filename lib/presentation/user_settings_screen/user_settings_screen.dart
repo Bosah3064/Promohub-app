@@ -166,10 +166,16 @@ class _UserSettingsScreenState extends State<UserSettingsScreen> {
         return true;
       },
       child: Scaffold(
-        backgroundColor: AppTheme.lightTheme.scaffoldBackgroundColor,
+        backgroundColor: AppTheme.backgroundLight,
         appBar: AppBar(
-          title: Text('Settings'),
-          elevation: 1,
+          title: Text('Settings', style: TextStyle(fontWeight: FontWeight.w800, color: Colors.white)),
+          elevation: 0,
+          flexibleSpace: Container(
+            decoration: BoxDecoration(
+              gradient: AppTheme.primaryGradient,
+            ),
+          ),
+          foregroundColor: Colors.white,
           actions: [
             if (_hasUnsavedChanges)
               Container(
@@ -178,8 +184,8 @@ class _UserSettingsScreenState extends State<UserSettingsScreen> {
                   child: Text(
                     '• Unsaved',
                     style: TextStyle(
-                      color: AppTheme.lightTheme.colorScheme.error,
-                      fontWeight: FontWeight.w600,
+                      color: AppTheme.accentYellow,
+                      fontWeight: FontWeight.w800,
                     ),
                   ),
                 ),
@@ -804,7 +810,7 @@ class _UserSettingsScreenState extends State<UserSettingsScreen> {
         Switch(
           value: value,
           onChanged: onChanged,
-          activeColor: AppTheme.lightTheme.colorScheme.primary,
+          activeThumbColor: AppTheme.lightTheme.colorScheme.primary,
         ),
       ],
     );

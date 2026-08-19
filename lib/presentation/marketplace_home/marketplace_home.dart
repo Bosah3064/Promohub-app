@@ -3,10 +3,11 @@ import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:sizer/sizer.dart';
 
+
 import '../../core/app_export.dart';
 import '../../services/location_currency_service.dart';
 import '../../services/marketplace_service.dart';
-import '../../services/supabase_service.dart';
+import '../../services/firebase_service.dart';
 import './widgets/category_chips_widget.dart';
 import './widgets/empty_state_widget.dart';
 import './widgets/featured_listings_carousel_widget.dart';
@@ -29,7 +30,7 @@ class _MarketplaceHomeState extends State<MarketplaceHome>
   final ScrollController _scrollController = ScrollController();
   final MarketplaceService _marketplaceService = MarketplaceService();
   final LocationCurrencyService _locationService = LocationCurrencyService();
-  final SupabaseService _supabaseService = SupabaseService();
+  final FirebaseService _firebaseService = FirebaseService();
 
   int _currentBottomNavIndex = 0;
   String _currentLocation = 'Lagos, Nigeria';
@@ -42,7 +43,14 @@ class _MarketplaceHomeState extends State<MarketplaceHome>
   List<Map<String, dynamic>> _categories = [];
   List<Map<String, dynamic>> _featuredListings = [];
   List<Map<String, dynamic>> _recentListings = [];
+  List<Map<String, dynamic>> _sponsoredListings = [];
   List<String> _availableLocations = [];
+
+  // Pagination state
+  int _currentPage = 0;
+  final int _limit = 20;
+  bool _hasMoreListings = true;
+  bool _isLoadingMore = false;
 
   List<Map<String, dynamic>> get _filteredListings {
     List<Map<String, dynamic>> filtered = List.from(_recentListings);
@@ -102,12 +110,35 @@ class _MarketplaceHomeState extends State<MarketplaceHome>
   void initState() {
     super.initState();
     _loadInitialData();
+    _scrollController.addListener(_onScroll);
+    _setupRealtimeSubscription();
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+            _scrollController.position.maxScrollExtent - 200 &&
+        !_isLoadingMore &&
+        _hasMoreListings) {
+      _loadMoreListings();
+    }
+  }
+
+  var _listingsSubscription;
+
+  void _setupRealtimeSubscription() async {
+    final firestore = _firebaseService.firestore;
+    _listingsSubscription = firestore.collection('listings').snapshots().listen((snapshot) {
+      if (mounted && !_isRefreshing) {
+        _refreshListings();
+      }
+    });
   }
 
   @override
   void dispose() {
     _searchController.dispose();
     _scrollController.dispose();
+    _listingsSubscription?.cancel();
     super.dispose();
   }
 
@@ -116,11 +147,15 @@ class _MarketplaceHomeState extends State<MarketplaceHome>
       setState(() => _isLoading = true);
 
       // Load data in parallel for better performance
+      _currentPage = 0;
+      _hasMoreListings = true;
+
       final results = await Future.wait([
         _marketplaceService.getCategories(),
         _marketplaceService.getFeaturedListings(limit: 10),
-        _marketplaceService.getListings(limit: 20),
+        _marketplaceService.getListings(limit: _limit, offset: 0),
         _locationService.getCountries(),
+        _marketplaceService.getSponsoredListings(limit: 5),
       ]);
 
       if (mounted) {
@@ -128,6 +163,11 @@ class _MarketplaceHomeState extends State<MarketplaceHome>
           _categories = results[0];
           _featuredListings = results[1];
           _recentListings = results[2];
+          _sponsoredListings = results[4];
+          
+          if (_recentListings.length < _limit) {
+            _hasMoreListings = false;
+          }
 
           // Extract location names from countries data
           final countries = results[3];
@@ -167,17 +207,25 @@ class _MarketplaceHomeState extends State<MarketplaceHome>
     HapticFeedback.lightImpact();
 
     try {
+      _currentPage = 0;
+      _hasMoreListings = true;
+
       // Refresh featured and recent listings
       final results = await Future.wait([
         _marketplaceService.getFeaturedListings(limit: 10),
-        _marketplaceService.getListings(limit: 20),
+        _marketplaceService.getListings(limit: _limit, offset: 0),
+        _marketplaceService.getSponsoredListings(limit: 5),
       ]);
 
       if (mounted) {
         setState(() {
           _featuredListings = results[0];
           _recentListings = results[1];
+          _sponsoredListings = results[2];
           _isRefreshing = false;
+          if (_recentListings.length < _limit) {
+            _hasMoreListings = false;
+          }
         });
 
         Fluttertoast.showToast(
@@ -195,6 +243,44 @@ class _MarketplaceHomeState extends State<MarketplaceHome>
           toastLength: Toast.LENGTH_SHORT,
           gravity: ToastGravity.BOTTOM,
         );
+      }
+    }
+  }
+
+  Future<void> _loadMoreListings() async {
+    if (_isLoadingMore || !_hasMoreListings) return;
+
+    setState(() {
+      _isLoadingMore = true;
+    });
+
+    try {
+      final nextOffset = (_currentPage + 1) * _limit;
+      final moreListings = await _marketplaceService.getListings(
+        limit: _limit,
+        offset: nextOffset,
+      );
+
+      if (mounted) {
+        setState(() {
+          _currentPage++;
+          if (moreListings.isEmpty || moreListings.length < _limit) {
+            _hasMoreListings = false;
+          }
+          // Avoid duplicates
+          for (var listing in moreListings) {
+            if (!_recentListings.any((r) => r['id'] == listing['id'])) {
+              _recentListings.add(listing);
+            }
+          }
+          _isLoadingMore = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoadingMore = false;
+        });
       }
     }
   }
@@ -281,7 +367,7 @@ class _MarketplaceHomeState extends State<MarketplaceHome>
   }
 
   Future<void> _onFavoriteTap(Map<String, dynamic> listing) async {
-    final currentUserId = _supabaseService.currentUserId;
+    final currentUserId = _firebaseService.currentUserId;
     if (currentUserId == null) {
       Fluttertoast.showToast(
         msg: "Please log in to save favorites",
@@ -454,6 +540,74 @@ class _MarketplaceHomeState extends State<MarketplaceHome>
                           if (_featuredListings.isNotEmpty)
                             SliverToBoxAdapter(child: SizedBox(height: 4.h)),
 
+                          // Sponsored Listings Block
+                          if (_sponsoredListings.isNotEmpty && _selectedCategory == null && _appliedFilters == null)
+                            SliverToBoxAdapter(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Padding(
+                                    padding: EdgeInsets.symmetric(horizontal: 4.w),
+                                    child: Row(
+                                      children: [
+                                        Icon(Icons.auto_awesome, color: AppTheme.secondaryLight, size: 20),
+                                        SizedBox(width: 2.w),
+                                        Text(
+                                          'Sponsored',
+                                          style: AppTheme.lightTheme.textTheme.titleLarge?.copyWith(
+                                            fontWeight: FontWeight.w800,
+                                            color: AppTheme.secondaryLight,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  SizedBox(height: 2.h),
+                                  SizedBox(
+                                    height: 32.h,
+                                    child: ListView.builder(
+                                      scrollDirection: Axis.horizontal,
+                                      padding: EdgeInsets.symmetric(horizontal: 4.w),
+                                      itemCount: _sponsoredListings.length,
+                                      itemBuilder: (context, index) {
+                                        final ad = _sponsoredListings[index];
+                                        final listing = ad['listing_id'] as Map<String, dynamic>? ?? {};
+                                        if (listing.isEmpty) return const SizedBox();
+
+                                        final displayListing = {
+                                          'id': listing['id'],
+                                          'title': listing['title'] ?? 'Unknown',
+                                          'price': 'KSh ${listing['price'] ?? 0}',
+                                          'location': listing['location'] ?? 'Location not set',
+                                          'timePosted': listing['created_at'] != null ? _formatTimeAgo(listing['created_at']) : '',
+                                          'image': (listing['images'] as List?)?.isNotEmpty == true
+                                              ? listing['images'][0]
+                                              : 'https://images.unsplash.com/photo-1560472355-536de3962603?w=400&h=300&fit=crop',
+                                          'isFavorite': listing['isFavorite'] ?? false,
+                                          'category': listing['category_id']?['name'] ?? 'Other',
+                                          'isSponsored': true,
+                                        };
+
+                                        return Container(
+                                          width: 45.w,
+                                          margin: EdgeInsets.only(right: 3.w),
+                                          child: ListingCardWidget(
+                                            listing: displayListing,
+                                            onTap: () {
+                                              _marketplaceService.recordAdClick(ad['id'].toString());
+                                              _onListingTap(displayListing);
+                                            },
+                                            onFavoriteTap: () => _onFavoriteTap(displayListing),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                  SizedBox(height: 4.h),
+                                ],
+                              ),
+                            ),
+
                           // Recent listings header
                           if (filteredListings.isNotEmpty)
                             SliverToBoxAdapter(
@@ -518,6 +672,18 @@ class _MarketplaceHomeState extends State<MarketplaceHome>
                                     );
                                   },
                                   childCount: filteredListings.length,
+                                ),
+                              ),
+                            ),
+
+                          if (_isLoadingMore)
+                            SliverToBoxAdapter(
+                              child: Padding(
+                                padding: EdgeInsets.symmetric(vertical: 2.h),
+                                child: Center(
+                                  child: CircularProgressIndicator(
+                                    color: AppTheme.lightTheme.colorScheme.primary,
+                                  ),
                                 ),
                               ),
                             ),

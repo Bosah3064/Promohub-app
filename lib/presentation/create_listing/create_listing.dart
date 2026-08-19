@@ -3,6 +3,9 @@ import 'package:image_picker/image_picker.dart';
 import 'package:sizer/sizer.dart';
 
 import '../../core/app_export.dart';
+import '../../services/marketplace_service.dart';
+import '../../services/firebase_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import './widgets/category_selector.dart';
 import './widgets/condition_toggle.dart';
 import './widgets/description_field.dart';
@@ -343,15 +346,49 @@ class _CreateListingState extends State<CreateListing> {
       _isLoading = true;
     });
 
-    // Simulate posting process
-    await Future.delayed(const Duration(seconds: 2));
+    try {
+      final marketplaceService = MarketplaceService();
+      final user = FirebaseAuth.instance.currentUser;
+      final userId = user?.uid;
 
-    if (mounted) {
-      setState(() {
-        _isLoading = false;
-      });
+      if (userId == null) {
+        throw Exception('Not authenticated');
+      }
 
-      // Show success dialog
+      // Check if user has a shop
+      final shop = await marketplaceService.getUserShop(userId);
+      if (shop == null) {
+        if (mounted) {
+          setState(() => _isLoading = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('You must create a shop first to post listings!')),
+          );
+          Navigator.pushNamed(context, '/seller-registration');
+        }
+        return;
+      }
+
+      // We should upload images here and get URLs, but for now we'll use placeholder
+      final listingData = {
+        'seller_id': userId,
+        'shop_id': shop['id'],
+        'title': _titleController.text.trim(),
+        'description': _description,
+        'price': double.tryParse(_price ?? '0') ?? 0,
+        'condition': _selectedCondition?.toLowerCase().replaceAll(' ', '_'),
+        'status': 'active',
+        // In reality, we map _selectedCategory to category UUID, using placeholder category logic
+        // 'category_id': ...
+      };
+
+      await marketplaceService.createListing(listingData);
+
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+
+        // Show success dialog
       showDialog(
         context: context,
         barrierDismissible: false,
@@ -400,6 +437,14 @@ class _CreateListingState extends State<CreateListing> {
           ],
         ),
       );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error posting listing: $e')),
+        );
+      }
     }
   }
 

@@ -66,7 +66,7 @@ class ToggleSettingsItemWidget extends StatelessWidget {
               Switch(
                 value: value,
                 onChanged: onChanged,
-                activeColor: AppTheme.lightTheme.colorScheme.primary,
+                activeThumbColor: AppTheme.lightTheme.colorScheme.primary,
                 inactiveThumbColor:
                     AppTheme.lightTheme.colorScheme.onSurfaceVariant,
                 inactiveTrackColor: AppTheme

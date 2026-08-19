@@ -4,8 +4,17 @@
 build/
 ios/Pods/
 android/.gradle/
-.env
-env.json
 
+# Environment & Secrets (NEVER commit these)
 .env
 env.json
+*.keystore
+*.jks
+key.properties
+
+# IDE
+.vscode/settings.json
+.idea/
+
+# Logs
+*.log

@@ -8,6 +8,9 @@ import './widgets/animated_logo_widget.dart';
 import './widgets/background_gradient_widget.dart';
 import './widgets/loading_indicator_widget.dart';
 import './widgets/retry_connection_widget.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -21,31 +24,8 @@ class _SplashScreenState extends State<SplashScreen> {
   bool _showRetry = false;
   String _loadingText = 'Initializing PromoHub...';
 
-  // Mock user data for demonstration
-  final Map<String, dynamic> _mockUserData = {
-    "isAuthenticated": false,
-    "isFirstTime": true,
-    "hasCompletedOnboarding": false,
-    "userPreferences": {
-      "theme": "light",
-      "language": "en",
-      "currency": "NGN",
-      "location": "Lagos, Nigeria"
-    },
-    "marketplaceConfig": {
-      "categories": [
-        "Electronics",
-        "Fashion",
-        "Vehicles",
-        "Real Estate",
-        "Jobs",
-        "Services"
-      ],
-      "featuredListings": 25,
-      "activeUsers": 15420,
-      "lastUpdate": "2025-07-29T07:18:48.829429"
-    }
-  };
+  bool _isAuthenticated = false;
+  bool _isFirstTime = true;
 
   @override
   void initState() {
@@ -97,12 +77,21 @@ class _SplashScreenState extends State<SplashScreen> {
       _loadingText = 'Checking authentication...';
     });
 
-    await Future.delayed(const Duration(milliseconds: 800));
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      _isFirstTime = prefs.getBool('isFirstTime') ?? true;
+      
+      // If it's not the first time, check authentication
+      if (!_isFirstTime) {
+         final user = FirebaseAuth.instance.currentUser;
+         _isAuthenticated = user != null;
+      }
+    } catch (e) {
+      debugPrint('Auth check error: $e');
+      _isAuthenticated = false;
+    }
 
-    // Simulate authentication check
-    final bool isAuthenticated = _mockUserData["isAuthenticated"] as bool;
-
-    if (!isAuthenticated) {
+    if (!_isAuthenticated) {
       setState(() {
         _loadingText = 'Setting up user session...';
       });
@@ -113,76 +102,35 @@ class _SplashScreenState extends State<SplashScreen> {
     setState(() {
       _loadingText = 'Loading preferences...';
     });
-
-    await Future.delayed(const Duration(milliseconds: 600));
-
-    // Simulate loading user preferences
-    final preferences =
-        _mockUserData["userPreferences"] as Map<String, dynamic>;
-
-    // Apply theme based on preferences
-    if (preferences["theme"] == "dark") {
-      // Would apply dark theme here
-    }
+    // In a real app, load preferences from local storage or backend
+    await Future.delayed(const Duration(milliseconds: 300));
   }
 
   Future<void> _fetchMarketplaceConfig() async {
     setState(() {
       _loadingText = 'Fetching marketplace data...';
     });
-
-    await Future.delayed(const Duration(milliseconds: 700));
-
-    // Simulate network timeout scenario (5% chance)
-    if (DateTime.now().millisecond % 20 == 0) {
-      throw Exception('Network timeout');
-    }
-
-    // Simulate successful config fetch
-    final config = _mockUserData["marketplaceConfig"] as Map<String, dynamic>;
-    final categories = config["categories"] as List;
-
-    setState(() {
-      _loadingText = 'Loading ${categories.length} categories...';
-    });
+    // Optional: Pre-fetch some generic config if needed
+    await Future.delayed(const Duration(milliseconds: 300));
   }
 
   Future<void> _prepareCachedData() async {
     setState(() {
-      _loadingText = 'Preparing listings cache...';
+      _loadingText = 'Preparing app...';
     });
-
-    await Future.delayed(const Duration(milliseconds: 500));
-
-    // Simulate preparing cached listings data
-    final config = _mockUserData["marketplaceConfig"] as Map<String, dynamic>;
-    final featuredCount = config["featuredListings"] as int;
-
-    setState(() {
-      _loadingText = 'Cached $featuredCount featured listings';
-    });
+    await Future.delayed(const Duration(milliseconds: 200));
   }
 
   Future<void> _navigateToNextScreen() async {
-    await Future.delayed(const Duration(milliseconds: 800));
-
     if (!mounted) return;
-
-    final bool isAuthenticated = _mockUserData["isAuthenticated"] as bool;
-    final bool isFirstTime = _mockUserData["isFirstTime"] as bool;
-    final bool hasCompletedOnboarding =
-        _mockUserData["hasCompletedOnboarding"] as bool;
 
     String nextRoute;
 
-    if (isAuthenticated) {
-      // Authenticated users go directly to marketplace home
+    if (_isAuthenticated) {
       nextRoute = '/marketplace-home';
-    } else if (isFirstTime || !hasCompletedOnboarding) {
-      // New users see onboarding flow
+    } else if (_isFirstTime) {
       nextRoute = '/onboarding-flow';
     } else {
-      // Returning non-authenticated users reach login screen
       nextRoute = '/login-screen';
     }
 
@@ -208,6 +156,7 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   void _onLogoAnimationComplete() {
+    if (!mounted) return;
     // Logo animation completed, continue with loading
     if (_isLoading) {
       setState(() {
@@ -242,27 +191,29 @@ class _SplashScreenState extends State<SplashScreen> {
             ),
           ),
         ),
-        Expanded(
+        Flexible(
           flex: 1,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              if (_isLoading) ...[
-                LoadingIndicatorWidget(
-                  loadingText: _loadingText,
-                ),
-                SizedBox(height: 2.h),
-                Text(
-                  'African Marketplace • Trusted Commerce',
-                  style: AppTheme.lightTheme.textTheme.bodySmall?.copyWith(
-                    color: AppTheme.lightTheme.colorScheme.onSurface
-                        .withValues(alpha: 0.6),
-                    fontSize: 11.sp,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                if (_isLoading) ...[
+                  LoadingIndicatorWidget(
+                    loadingText: _loadingText,
                   ),
-                  textAlign: TextAlign.center,
-                ),
+                  SizedBox(height: 2.h),
+                  Text(
+                    'African Marketplace • Trusted Commerce',
+                    style: AppTheme.lightTheme.textTheme.bodySmall?.copyWith(
+                      color: AppTheme.lightTheme.colorScheme.onSurface
+                          .withValues(alpha: 0.6),
+                      fontSize: 11.sp,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
         ),
         SizedBox(height: 4.h),

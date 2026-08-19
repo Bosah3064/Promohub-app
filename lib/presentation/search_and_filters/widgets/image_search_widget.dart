@@ -213,29 +213,35 @@ class _ImageSearchWidgetState extends State<ImageSearchWidget>
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.black,
-      child: ScaleTransition(
-        scale: _scaleAnimation,
-        child: Stack(
-          children: [
-            if (_capturedImage != null)
-              _buildImagePreview()
-            else if (_isCameraInitialized && _cameraController != null)
-              Positioned.fill(
-                child: CameraPreview(_cameraController!),
-              )
-            else
-              Positioned.fill(
-                child: Container(
-                  color: Colors.black,
-                  child: Center(
-                    child: CircularProgressIndicator(
-                      color: AppTheme.lightTheme.colorScheme.primary,
+    return Container(
+      height: 90.h,
+      decoration: BoxDecoration(
+        color: Colors.black,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24.0)),
+      ),
+      child: ClipRRect(
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24.0)),
+        child: ScaleTransition(
+          scale: _scaleAnimation,
+          child: Stack(
+            children: [
+              if (_capturedImage != null)
+                _buildImagePreview()
+              else if (_isCameraInitialized && _cameraController != null)
+                Positioned.fill(
+                  child: CameraPreview(_cameraController!),
+                )
+              else
+                Positioned.fill(
+                  child: Container(
+                    color: Colors.black,
+                    child: Center(
+                      child: CircularProgressIndicator(
+                        color: AppTheme.lightTheme.colorScheme.primary,
+                      ),
                     ),
                   ),
                 ),
-              ),
 
             // Header
             Positioned(
@@ -343,7 +349,8 @@ class _ImageSearchWidgetState extends State<ImageSearchWidget>
           ],
         ),
       ),
-    );
+    ),
+  );
   }
 
   Widget _buildImagePreview() {

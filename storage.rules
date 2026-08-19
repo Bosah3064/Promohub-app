@@ -1,0 +1,38 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Allow read access to all files
+    match /{allPaths=**} {
+      allow read: if true;
+    }
+    
+    // Listing images — authenticated users can upload
+    match /listings/{listingId}/{fileName} {
+      allow write: if request.auth != null
+                   && request.resource.size < 10 * 1024 * 1024  // 10MB max
+                   && request.resource.contentType.matches('image/.*');
+    }
+    
+    // User avatars — only the user themselves
+    match /avatars/{userId}/{fileName} {
+      allow write: if request.auth != null
+                   && request.auth.uid == userId
+                   && request.resource.size < 5 * 1024 * 1024  // 5MB max
+                   && request.resource.contentType.matches('image/.*');
+    }
+    
+    // Shop logos and banners
+    match /shops/{shopId}/{fileName} {
+      allow write: if request.auth != null
+                   && request.resource.size < 10 * 1024 * 1024
+                   && request.resource.contentType.matches('image/.*');
+    }
+    
+    // KYC documents — authenticated users, private
+    match /kyc/{shopId}/{fileName} {
+      allow write: if request.auth != null
+                   && request.resource.size < 15 * 1024 * 1024;
+      allow read: if request.auth != null;
+    }
+  }
+}

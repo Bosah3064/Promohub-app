@@ -161,34 +161,43 @@ class ActiveListingsWidget extends StatelessWidget {
           ),
           Expanded(
             child: Padding(
-              padding: EdgeInsets.all(3.w),
+              padding: EdgeInsets.symmetric(horizontal: 2.w, vertical: 1.h),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    listing["title"] as String,
-                    style: AppTheme.lightTheme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w600,
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          listing["title"] as String,
+                          style: AppTheme.lightTheme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 12.sp,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        SizedBox(height: 0.5.h),
+                        Text(
+                          listing["price"] as String,
+                          style: AppTheme.lightTheme.textTheme.titleMedium?.copyWith(
+                            color: AppTheme.lightTheme.primaryColor,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 13.sp,
+                          ),
+                        ),
+                      ],
                     ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
                   ),
-                  SizedBox(height: 1.h),
-                  Text(
-                    listing["price"] as String,
-                    style: AppTheme.lightTheme.textTheme.titleMedium?.copyWith(
-                      color: AppTheme.lightTheme.primaryColor,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  Spacer(),
                   Row(
                     children: [
                       Expanded(
                         child: OutlinedButton(
                           onPressed: () => onEditListing(listing),
                           style: OutlinedButton.styleFrom(
-                            padding: EdgeInsets.symmetric(vertical: 1.h),
+                            padding: EdgeInsets.symmetric(vertical: 0.5.h),
                             minimumSize: Size(0, 0),
                           ),
                           child: Text(

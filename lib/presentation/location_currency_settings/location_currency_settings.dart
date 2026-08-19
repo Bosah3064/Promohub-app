@@ -3,7 +3,7 @@ import 'package:sizer/sizer.dart';
 
 import '../../core/app_export.dart';
 import '../../services/location_currency_service.dart';
-import '../../services/supabase_service.dart';
+import '../../services/firebase_service.dart';
 import './widgets/currency_preview_widget.dart';
 import './widgets/language_selector_widget.dart';
 import './widgets/location_detection_widget.dart';
@@ -41,7 +41,7 @@ class _LocationCurrencySettingsState extends State<LocationCurrencySettings> {
       setState(() => _isLoading = true);
 
       // Fix: Use getter instead of method call
-      _currentUserId = SupabaseService().currentUserId;
+      _currentUserId = FirebaseService().currentUserId;
 
       // Fix: Use correct method name
       final results = await Future.wait([

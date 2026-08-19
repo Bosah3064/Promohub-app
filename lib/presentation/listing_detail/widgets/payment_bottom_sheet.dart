@@ -173,7 +173,7 @@ class _PaymentBottomSheetState extends State<PaymentBottomSheet> {
 
       // Create payment intent
       final paymentData = await PaymentService()
-          .createPaymentIntent(listingId: widget.listing['id'], amount: total);
+          .createStripePaymentIntent(orderId: 'MOCK_${widget.listing['id']}', amount: total);
 
       // In a real app, you would integrate with Stripe's mobile SDK here
       // For demo purposes, we'll simulate payment completion

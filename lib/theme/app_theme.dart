@@ -5,63 +5,100 @@ import 'package:google_fonts/google_fonts.dart';
 class AppTheme {
   AppTheme._();
 
-  // African marketplace color palette - Warm Professional Palette
-  static const Color primaryLight = Color(0xFF2E7D32); // Deep forest green
+  // Premium Marketplace Palette — Safaricom-inspired Green + Red + Teal
+  static const Color primaryLight = Color(0xFF2E8B57); // Rich green (SeaGreen)
   static const Color primaryVariantLight =
-      Color(0xFF1B5E20); // Darker green variant
-  static const Color secondaryLight = Color(0xFFFF8F00); // Warm amber
-  static const Color secondaryVariantLight = Color(0xFFE65100); // Darker amber
-  static const Color backgroundLight = Color(0xFFFAFAFA); // Soft off-white
+      Color(0xFF1B6B3F); // Darker green variant
+  static const Color secondaryLight = Color(0xFFE4002B); // Vibrant red
+  static const Color secondaryVariantLight = Color(0xFFC00025); // Deep red
+  static const Color backgroundLight = Color(0xFFF2F8F4); // Soft green-tinted off-white
   static const Color surfaceLight = Color(0xFFFFFFFF); // Pure white
-  static const Color errorLight = Color(0xFFD32F2F); // Clear red
-  static const Color successLight = Color(0xFF388E3C); // Confirmation green
-  static const Color warningLight = Color(0xFFF57C00); // Attention orange
+  static const Color errorLight = Color(0xFFE53935); // Bright red
+  static const Color successLight = Color(0xFF4CB848); // Safaricom green
+  static const Color warningLight = Color(0xFFFFAB00); // Bright amber
   static const Color onPrimaryLight = Color(0xFFFFFFFF);
   static const Color onSecondaryLight = Color(0xFFFFFFFF);
   static const Color onBackgroundLight =
-      Color(0xFF212121); // High contrast dark gray
-  static const Color onSurfaceLight = Color(0xFF212121);
+      Color(0xFF1A1D26); // Deep charcoal
+  static const Color onSurfaceLight = Color(0xFF1A1D26);
   static const Color onErrorLight = Color(0xFFFFFFFF);
 
-  // Dark theme colors - adapted for night usage
+  // Dark theme — rich surfaces with green/red accents
   static const Color primaryDark =
-      Color(0xFF4CAF50); // Lighter green for dark mode
-  static const Color primaryVariantDark = Color(0xFF2E7D32);
-  static const Color secondaryDark = Color(0xFFFFB74D); // Softer amber for dark
-  static const Color secondaryVariantDark = Color(0xFFFF8F00);
-  static const Color backgroundDark = Color(0xFF121212);
-  static const Color surfaceDark = Color(0xFF1E1E1E);
-  static const Color errorDark = Color(0xFFEF5350);
-  static const Color successDark = Color(0xFF66BB6A);
-  static const Color warningDark = Color(0xFFFFB74D);
+      Color(0xFF4CB848); // Safaricom green for dark mode
+  static const Color primaryVariantDark = Color(0xFF2E8B57);
+  static const Color secondaryDark = Color(0xFFFF6B6B); // Soft red for dark
+  static const Color secondaryVariantDark = Color(0xFFE4002B);
+  static const Color backgroundDark = Color(0xFF0F1117); // Deep navy-black
+  static const Color surfaceDark = Color(0xFF1A1D26); // Charcoal navy
+  static const Color errorDark = Color(0xFFFF5252);
+  static const Color successDark = Color(0xFF69F0AE);
+  static const Color warningDark = Color(0xFFFFD740);
   static const Color onPrimaryDark = Color(0xFF000000);
   static const Color onSecondaryDark = Color(0xFF000000);
-  static const Color onBackgroundDark = Color(0xFFFFFFFF);
-  static const Color onSurfaceDark = Color(0xFFFFFFFF);
+  static const Color onBackgroundDark = Color(0xFFF0F0F5);
+  static const Color onSurfaceDark = Color(0xFFF0F0F5);
   static const Color onErrorDark = Color(0xFF000000);
 
   // Card and dialog colors
   static const Color cardLight = Color(0xFFFFFFFF);
-  static const Color cardDark = Color(0xFF2D2D2D);
+  static const Color cardDark = Color(0xFF242735); // Blue-grey card
   static const Color dialogLight = Color(0xFFFFFFFF);
-  static const Color dialogDark = Color(0xFF2D2D2D);
+  static const Color dialogDark = Color(0xFF242735);
 
   // Shadow colors - subtle elevation
-  static const Color shadowLight = Color(0x0F000000);
+  static const Color shadowLight = Color(0x14000000);
   static const Color shadowDark = Color(0x1FFFFFFF);
 
   // Divider colors
-  static const Color dividerLight = Color(0xFFE0E0E0); // Subtle gray
-  static const Color dividerDark = Color(0xFF424242);
+  static const Color dividerLight = Color(0xFFE8EAF0); // Cool gray
+  static const Color dividerDark = Color(0xFF2F3342);
+
+  // Accent colors for vibrant UI sections
+  static const Color accentOrange = Color(0xFFFF9F43);  // Warm amber
+  static const Color accentPurple = Color(0xFF6C5CE7);  // Soft purple
+  static const Color accentBlue   = Color(0xFF0984E3);  // Sky blue
+  static const Color accentPink   = Color(0xFFE84393);  // Rose pink
+  static const Color accentGreen  = Color(0xFF4CB848);  // Safaricom green
+  static const Color accentRed    = Color(0xFFE4002B);  // Safaricom red
+  static const Color accentYellow = Color(0xFFFDCB6E);  // Gold
+  static const Color accentTeal   = Color(0xFF0D6E6E);  // Deep teal
+
+  // Gradient helpers
+  static const LinearGradient primaryGradient = LinearGradient(
+    colors: [Color(0xFF2E8B57), Color(0xFF4CB848)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+  static const LinearGradient coralGradient = LinearGradient(
+    colors: [Color(0xFFE4002B), Color(0xFFE84393)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+  static const LinearGradient tealToMint = LinearGradient(
+    colors: [Color(0xFF0D6E6E), Color(0xFF4CB848)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+  static const LinearGradient safaricomGradient = LinearGradient(
+    colors: [Color(0xFF4CB848), Color(0xFF2E8B57), Color(0xFF1B6B3F)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+  static const LinearGradient redGreenGradient = LinearGradient(
+    colors: [Color(0xFFE4002B), Color(0xFF4CB848)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
 
   // Text colors with proper emphasis levels
-  static const Color textPrimaryLight = Color(0xFF212121); // High contrast
-  static const Color textSecondaryLight = Color(0xFF757575); // Medium gray
-  static const Color textDisabledLight = Color(0xFFBDBDBD); // Light gray
+  static const Color textPrimaryLight = Color(0xFF1A1D26); // Deep charcoal
+  static const Color textSecondaryLight = Color(0xFF6B7280); // Balanced gray
+  static const Color textDisabledLight = Color(0xFFB0B5BF); // Soft gray
 
-  static const Color textPrimaryDark = Color(0xFFFFFFFF);
-  static const Color textSecondaryDark = Color(0xFFB0B0B0);
-  static const Color textDisabledDark = Color(0xFF616161);
+  static const Color textPrimaryDark = Color(0xFFF0F0F5);
+  static const Color textSecondaryDark = Color(0xFF9CA3AF);
+  static const Color textDisabledDark = Color(0xFF4B5563);
 
   /// Light theme optimized for African marketplace mobile commerce
   static ThemeData lightTheme = ThemeData(
@@ -96,17 +133,18 @@ class AppTheme {
       cardColor: cardLight,
       dividerColor: dividerLight,
 
-      // AppBar theme for trust-building header
+      // AppBar theme — defaults to surface-colored with dark icons
+      // Screens with green AppBars should override explicitly
       appBarTheme: AppBarTheme(
           backgroundColor: surfaceLight,
-          foregroundColor: textPrimaryLight,
-          elevation: 1.0, // Minimal elevation for clean look
+          foregroundColor: onSurfaceLight,
+          elevation: 0,
           shadowColor: shadowLight,
           titleTextStyle: GoogleFonts.inter(
               fontSize: 20,
               fontWeight: FontWeight.w600,
-              color: textPrimaryLight),
-          iconTheme: IconThemeData(color: textPrimaryLight)),
+              color: onSurfaceLight),
+          iconTheme: IconThemeData(color: onSurfaceLight)),
 
       // Card theme for listing items
       cardTheme: CardThemeData(
@@ -121,13 +159,13 @@ class AppTheme {
 
       // Bottom navigation for mobile-first navigation
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
-          backgroundColor: surfaceLight,
-          selectedItemColor: primaryLight,
-          unselectedItemColor: textSecondaryLight,
+          backgroundColor: primaryVariantLight,
+          selectedItemColor: onPrimaryLight,
+          unselectedItemColor: onPrimaryLight.withAlpha(153),
           elevation: 8.0,
           type: BottomNavigationBarType.fixed,
           selectedLabelStyle:
-              GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w500),
+              GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600),
           unselectedLabelStyle:
               GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w400)),
 

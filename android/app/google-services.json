@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "148879298385",
+    "firebase_url": "https://promohub-ce87d-default-rtdb.firebaseio.com",
+    "project_id": "promohub-ce87d",
+    "storage_bucket": "promohub-ce87d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:148879298385:android:ecb0d617a504b5a6ba0d70",
+        "android_client_info": {
+          "package_name": "com.promohub.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "148879298385-spglb7hg4agn5ljnddg98bodcbu5htbo.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBy_vqkJD5930qHDsuizAsfeaOHRzA5SJM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "148879298385-spglb7hg4agn5ljnddg98bodcbu5htbo.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

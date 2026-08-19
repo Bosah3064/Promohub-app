@@ -170,191 +170,198 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.black,
-      child: Stack(
-        children: [
-          if (_isCameraInitialized && _cameraController != null)
-            Positioned.fill(
-              child: CameraPreview(_cameraController!),
-            )
-          else
-            Positioned.fill(
-              child: Container(
-                color: Colors.black,
-                child: Center(
-                  child: CircularProgressIndicator(
-                    color: AppTheme.lightTheme.colorScheme.primary,
+    return Container(
+      height: 90.h,
+      decoration: BoxDecoration(
+        color: Colors.black,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24.0)),
+      ),
+      child: ClipRRect(
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24.0)),
+        child: Stack(
+          children: [
+            if (_isCameraInitialized && _cameraController != null)
+              Positioned.fill(
+                child: CameraPreview(_cameraController!),
+              )
+            else
+              Positioned.fill(
+                child: Container(
+                  color: Colors.black,
+                  child: Center(
+                    child: CircularProgressIndicator(
+                      color: AppTheme.lightTheme.colorScheme.primary,
+                    ),
                   ),
                 ),
               ),
-            ),
-
-          // Overlay with scanning frame
-          Positioned.fill(
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.5),
-              ),
-              child: Center(
-                child: Container(
-                  width: 70.w,
-                  height: 50.h,
-                  decoration: BoxDecoration(
-                    border: Border.all(
-                      color: _isScanning
-                          ? AppTheme.lightTheme.colorScheme.primary
-                          : AppTheme.lightTheme.colorScheme.secondary,
-                      width: 3.0,
+  
+            // Overlay with scanning frame
+            Positioned.fill(
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.5),
+                ),
+                child: Center(
+                  child: Container(
+                    width: 70.w,
+                    height: 40.h,
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                        color: _isScanning
+                            ? AppTheme.lightTheme.colorScheme.primary
+                            : AppTheme.lightTheme.colorScheme.secondary,
+                        width: 3.0,
+                      ),
+                      borderRadius: BorderRadius.circular(12.0),
                     ),
-                    borderRadius: BorderRadius.circular(12.0),
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(9.0),
-                    child: Container(
-                      color: Colors.transparent,
-                      child: Stack(
-                        children: [
-                          // Corner indicators
-                          ..._buildCornerIndicators(),
-
-                          // Scanning line
-                          if (_isScanning)
-                            AnimatedBuilder(
-                              animation: _scanLineAnimation,
-                              builder: (context, child) {
-                                return Positioned(
-                                  top: _scanLineAnimation.value * (50.h - 100),
-                                  left: 0,
-                                  right: 0,
-                                  child: Container(
-                                    height: 2,
-                                    decoration: BoxDecoration(
-                                      gradient: LinearGradient(
-                                        colors: [
-                                          Colors.transparent,
-                                          AppTheme
-                                              .lightTheme.colorScheme.primary,
-                                          Colors.transparent,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(9.0),
+                      child: Container(
+                        color: Colors.transparent,
+                        child: Stack(
+                          children: [
+                            // Corner indicators
+                            ..._buildCornerIndicators(),
+  
+                            // Scanning line
+                            if (_isScanning)
+                              AnimatedBuilder(
+                                animation: _scanLineAnimation,
+                                builder: (context, child) {
+                                  return Positioned(
+                                    top: _scanLineAnimation.value * (40.h - 10),
+                                    left: 0,
+                                    right: 0,
+                                    child: Container(
+                                      height: 2,
+                                      decoration: BoxDecoration(
+                                        gradient: LinearGradient(
+                                          colors: [
+                                            Colors.transparent,
+                                            AppTheme
+                                                .lightTheme.colorScheme.primary,
+                                            Colors.transparent,
+                                          ],
+                                        ),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: AppTheme
+                                                .lightTheme.colorScheme.primary,
+                                            blurRadius: 10.0,
+                                            spreadRadius: 2.0,
+                                          ),
                                         ],
                                       ),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: AppTheme
-                                              .lightTheme.colorScheme.primary,
-                                          blurRadius: 10.0,
-                                          spreadRadius: 2.0,
-                                        ),
-                                      ],
                                     ),
+                                  );
+                                },
+                              ),
+  
+                            // Success indicator
+                            if (!_isScanning)
+                              Center(
+                                child: Container(
+                                  padding: EdgeInsets.all(4.w),
+                                  decoration: BoxDecoration(
+                                    color:
+                                        AppTheme.lightTheme.colorScheme.secondary,
+                                    shape: BoxShape.circle,
                                   ),
-                                );
-                              },
-                            ),
-
-                          // Success indicator
-                          if (!_isScanning)
-                            Center(
-                              child: Container(
-                                padding: EdgeInsets.all(4.w),
-                                decoration: BoxDecoration(
-                                  color:
-                                      AppTheme.lightTheme.colorScheme.secondary,
-                                  shape: BoxShape.circle,
-                                ),
-                                child: CustomIconWidget(
-                                  iconName: 'check',
-                                  color: AppTheme
-                                      .lightTheme.colorScheme.onSecondary,
-                                  size: 32,
+                                  child: CustomIconWidget(
+                                    iconName: 'check',
+                                    color: AppTheme
+                                        .lightTheme.colorScheme.onSecondary,
+                                    size: 32,
+                                  ),
                                 ),
                               ),
-                            ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ),
                 ),
               ),
             ),
-          ),
-
-          // Header
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: SafeArea(
-              child: Container(
-                padding: EdgeInsets.all(4.w),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Scan Barcode',
-                      style: AppTheme.lightTheme.textTheme.titleLarge?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: _closeScanner,
-                      child: Container(
-                        padding: EdgeInsets.all(2.w),
-                        decoration: BoxDecoration(
-                          color: Colors.black.withValues(alpha: 0.5),
-                          shape: BoxShape.circle,
-                        ),
-                        child: CustomIconWidget(
-                          iconName: 'close',
+  
+            // Header
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: SafeArea(
+                child: Container(
+                  padding: EdgeInsets.all(4.w),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Scan Barcode',
+                        style: AppTheme.lightTheme.textTheme.titleLarge?.copyWith(
                           color: Colors.white,
-                          size: 24,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
-                    ),
-                  ],
+                      GestureDetector(
+                        onTap: _closeScanner,
+                        child: Container(
+                          padding: EdgeInsets.all(2.w),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.5),
+                            shape: BoxShape.circle,
+                          ),
+                          child: CustomIconWidget(
+                            iconName: 'close',
+                            color: Colors.white,
+                            size: 24,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-
-          // Instructions
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: SafeArea(
-              child: Container(
-                padding: EdgeInsets.all(4.w),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      _isScanning
-                          ? 'Position the barcode within the frame'
-                          : 'Barcode detected successfully!',
-                      style: AppTheme.lightTheme.textTheme.bodyLarge?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w500,
+  
+            // Instructions
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: SafeArea(
+                child: Container(
+                  padding: EdgeInsets.all(4.w),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        _isScanning
+                            ? 'Position the barcode within the frame'
+                            : 'Barcode detected successfully!',
+                        style: AppTheme.lightTheme.textTheme.bodyLarge?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        textAlign: TextAlign.center,
                       ),
-                      textAlign: TextAlign.center,
-                    ),
-                    SizedBox(height: 1.h),
-                    Text(
-                      _isScanning
-                          ? 'Make sure the barcode is clear and well-lit'
-                          : 'Searching for product information...',
-                      style: AppTheme.lightTheme.textTheme.bodyMedium?.copyWith(
-                        color: Colors.white.withValues(alpha: 0.8),
+                      SizedBox(height: 1.h),
+                      Text(
+                        _isScanning
+                            ? 'Make sure the barcode is clear and well-lit'
+                            : 'Searching for product information...',
+                        style: AppTheme.lightTheme.textTheme.bodyMedium?.copyWith(
+                          color: Colors.white.withValues(alpha: 0.8),
+                        ),
+                        textAlign: TextAlign.center,
                       ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

@@ -3,11 +3,12 @@ import 'package:flutter/services.dart';
 import 'package:sizer/sizer.dart';
 
 import '../../core/app_export.dart';
-import '../../theme/app_theme.dart';
 import './widgets/biometric_prompt.dart';
 import './widgets/login_form_field.dart';
 import './widgets/login_header.dart';
 import './widgets/social_login_button.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../../services/firebase_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -28,30 +29,37 @@ class _LoginScreenState extends State<LoginScreen> {
   String? _emailError;
   String? _passwordError;
 
-  // Mock credentials for testing
-  final Map<String, String> _mockCredentials = {
-    'buyer@promohub.com': 'buyer123',
-    'seller@promohub.com': 'seller123',
-    'admin@promohub.com': 'admin123',
-    '+234123456789': 'mobile123',
-  };
+  // No mock credentials needed anymore
 
   @override
   void initState() {
     super.initState();
     _loadSavedCredentials();
+    _emailController.addListener(_onFieldChanged);
+    _passwordController.addListener(_onFieldChanged);
+  }
+
+  void _onFieldChanged() {
+    setState(() {});
   }
 
   @override
   void dispose() {
+    _emailController.removeListener(_onFieldChanged);
+    _passwordController.removeListener(_onFieldChanged);
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
 
-  void _loadSavedCredentials() {
-    // Simulate loading saved email/phone from secure storage
-    _emailController.text = 'buyer@promohub.com';
+  Future<void> _loadSavedCredentials() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedEmail = prefs.getString('saved_email');
+    if (savedEmail != null) {
+      setState(() {
+        _emailController.text = savedEmail;
+      });
+    }
   }
 
   String? _validateEmail(String? value) {
@@ -113,30 +121,38 @@ class _LoginScreenState extends State<LoginScreen> {
       // Simulate network delay
       await Future.delayed(const Duration(seconds: 2));
 
-      // Check mock credentials
       final email = _emailController.text.trim();
       final password = _passwordController.text.trim();
 
-      if (_mockCredentials.containsKey(email) &&
-          _mockCredentials[email] == password) {
-        // Success - trigger haptic feedback
+      final response = await FirebaseService().signIn(
+        email: email,
+        password: password,
+      );
+
+      if (response != null) {
+        // Save email for next time
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('saved_email', email);
+
         HapticFeedback.lightImpact();
 
-        // Show biometric prompt for first-time login
-        if (email == 'buyer@promohub.com') {
-          setState(() {
-            _showBiometricPrompt = true;
-          });
-        } else {
-          _navigateToHome();
-        }
+        // Check if biometric is supported and prompt if not already configured
+        // For simplicity, just navigating to home now
+        _navigateToHome();
       } else {
-        // Invalid credentials
-        _showErrorMessage('Invalid email/phone or password. Please try again.');
+        _showErrorMessage('Invalid email or password. Please try again.');
       }
     } catch (e) {
-      _showErrorMessage(
-          'Network error. Please check your connection and try again.');
+      debugPrint('Sign in error: $e');
+      final errorStr = e.toString();
+      if (errorStr.contains('email_not_confirmed') ||
+          errorStr.contains('Email not confirmed')) {
+        _showErrorMessage(
+            'Please check your email and click the confirmation link to sign in.');
+      } else {
+        _showErrorMessage(
+            'Login failed. Please check your credentials and try again.');
+      }
     } finally {
       setState(() {
         _isLoading = false;
@@ -211,177 +227,208 @@ class _LoginScreenState extends State<LoginScreen> {
                   const LoginHeader(),
                   SizedBox(height: 4.h),
 
-                  // Login Form
-                  Form(
-                    key: _formKey,
-                    child: Column(
-                      children: [
-                        LoginFormField(
-                          label: 'Email or Phone',
-                          hint: 'Enter your email or phone number',
-                          keyboardType: TextInputType.emailAddress,
-                          controller: _emailController,
-                          validator: _validateEmail,
-                          showError: _showEmailError,
-                          errorText: _emailError,
+                  // Login Form Card
+                  Container(
+                    padding: EdgeInsets.all(5.w),
+                    decoration: BoxDecoration(
+                      color: AppTheme.surfaceLight,
+                      borderRadius: BorderRadius.circular(24),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppTheme.shadowLight,
+                          blurRadius: 20,
+                          offset: const Offset(0, 10),
                         ),
-                        SizedBox(height: 2.h),
-
-                        LoginFormField(
-                          label: 'Password',
-                          hint: 'Enter your password',
-                          isPassword: true,
-                          controller: _passwordController,
-                          validator: _validatePassword,
-                          showError: _showPasswordError,
-                          errorText: _passwordError,
-                        ),
-                        SizedBox(height: 1.h),
-
-                        // Forgot Password Link
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: TextButton(
-                            onPressed: () {
-                              // Navigate to forgot password
-                              _showErrorMessage(
-                                  'Forgot password feature coming soon!');
-                            },
-                            child: Text(
-                              'Forgot Password?',
-                              style: AppTheme.lightTheme.textTheme.labelMedium
-                                  ?.copyWith(
-                                color: AppTheme.lightTheme.colorScheme.primary,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
+                      ],
+                    ),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        children: [
+                          LoginFormField(
+                            label: 'Email or Phone',
+                            hint: 'Enter your email or phone number',
+                            keyboardType: TextInputType.emailAddress,
+                            controller: _emailController,
+                            validator: _validateEmail,
+                            showError: _showEmailError,
+                            errorText: _emailError,
                           ),
-                        ),
-                        SizedBox(height: 2.h),
+                          SizedBox(height: 2.h),
 
-                        // Sign In Button
-                        SizedBox(
-                          width: double.infinity,
-                          height: 6.h,
-                          child: ElevatedButton(
-                            onPressed:
-                                _isLoading || !_isFormValid() ? null : _signIn,
-                            child: _isLoading
-                                ? SizedBox(
-                                    width: 20,
-                                    height: 20,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      valueColor: AlwaysStoppedAnimation<Color>(
-                                        AppTheme
-                                            .lightTheme.colorScheme.onPrimary,
-                                      ),
-                                    ),
-                                  )
-                                : Text(
-                                    'Sign In',
-                                    style: AppTheme
-                                        .lightTheme.textTheme.labelLarge
-                                        ?.copyWith(
-                                      color: AppTheme
-                                          .lightTheme.colorScheme.onPrimary,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
+                          LoginFormField(
+                            label: 'Password',
+                            hint: 'Enter your password',
+                            isPassword: true,
+                            controller: _passwordController,
+                            validator: _validatePassword,
+                            showError: _showPasswordError,
+                            errorText: _passwordError,
                           ),
-                        ),
-                        SizedBox(height: 3.h),
+                          SizedBox(height: 1.h),
 
-                        // Divider
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Divider(
-                                color: AppTheme.lightTheme.colorScheme.outline,
-                                thickness: 1,
-                              ),
-                            ),
-                            Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 4.w),
+                          // Forgot Password Link
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: TextButton(
+                              onPressed: () {
+                                Navigator.pushNamed(
+                                    context, AppRoutes.forgotPassword);
+                              },
                               child: Text(
-                                'Or continue with',
-                                style: AppTheme.lightTheme.textTheme.bodySmall
+                                'Forgot Password?',
+                                style: AppTheme.lightTheme.textTheme.labelMedium
+                                    ?.copyWith(
+                                  color:
+                                      AppTheme.lightTheme.colorScheme.primary,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          ),
+                          SizedBox(height: 2.h),
+
+                          // Sign In Button
+                          GestureDetector(
+                            onTap: _isLoading ? null : _signIn,
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 300),
+                              width: double.infinity,
+                              height: 6.h,
+                              decoration: BoxDecoration(
+                                gradient: AppTheme.primaryGradient,
+                                borderRadius: BorderRadius.circular(14),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: AppTheme.primaryLight
+                                        .withValues(alpha: 0.35),
+                                    blurRadius: 12,
+                                    offset: const Offset(0, 6),
+                                  ),
+                                ],
+                              ),
+                              child: Center(
+                                child: _isLoading
+                                    ? SizedBox(
+                                        width: 22,
+                                        height: 22,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2.5,
+                                          valueColor:
+                                              AlwaysStoppedAnimation<Color>(
+                                            Colors.white,
+                                          ),
+                                        ),
+                                      )
+                                    : Text(
+                                        'Sign In',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 15.sp,
+                                          fontWeight: FontWeight.w700,
+                                          letterSpacing: 0.5,
+                                        ),
+                                      ),
+                              ),
+                            ),
+                          ),
+                          SizedBox(height: 3.h),
+
+                          // Divider
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Divider(
+                                  color:
+                                      AppTheme.lightTheme.colorScheme.outline,
+                                  thickness: 1,
+                                ),
+                              ),
+                              Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 4.w),
+                                child: Text(
+                                  'Or continue with',
+                                  style: AppTheme.lightTheme.textTheme.bodySmall
+                                      ?.copyWith(
+                                    color: AppTheme.lightTheme.colorScheme
+                                        .onSurfaceVariant,
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                child: Divider(
+                                  color:
+                                      AppTheme.lightTheme.colorScheme.outline,
+                                  thickness: 1,
+                                ),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 2.h),
+
+                          // Social Login Buttons
+                          SocialLoginButton(
+                            iconName: 'g_translate',
+                            label: 'Continue with Google',
+                            onPressed: _isLoading
+                                ? () {}
+                                : () => _handleSocialLogin('Google'),
+                          ),
+                          SocialLoginButton(
+                            iconName: 'apple',
+                            label: 'Continue with Apple',
+                            onPressed: _isLoading
+                                ? () {}
+                                : () => _handleSocialLogin('Apple'),
+                          ),
+                          SocialLoginButton(
+                            iconName: 'facebook',
+                            label: 'Continue with Facebook',
+                            onPressed: _isLoading
+                                ? () {}
+                                : () => _handleSocialLogin('Facebook'),
+                          ),
+                          SizedBox(height: 4.h),
+
+                          // Sign Up Link
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                'New to PromoHub? ',
+                                style: AppTheme.lightTheme.textTheme.bodyMedium
                                     ?.copyWith(
                                   color: AppTheme
                                       .lightTheme.colorScheme.onSurfaceVariant,
                                 ),
                               ),
-                            ),
-                            Expanded(
-                              child: Divider(
-                                color: AppTheme.lightTheme.colorScheme.outline,
-                                thickness: 1,
-                              ),
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: 2.h),
-
-                        // Social Login Buttons
-                        SocialLoginButton(
-                          iconName: 'g_translate',
-                          label: 'Continue with Google',
-                          onPressed: _isLoading
-                              ? () {}
-                              : () => _handleSocialLogin('Google'),
-                        ),
-                        SocialLoginButton(
-                          iconName: 'apple',
-                          label: 'Continue with Apple',
-                          onPressed: _isLoading
-                              ? () {}
-                              : () => _handleSocialLogin('Apple'),
-                        ),
-                        SocialLoginButton(
-                          iconName: 'facebook',
-                          label: 'Continue with Facebook',
-                          onPressed: _isLoading
-                              ? () {}
-                              : () => _handleSocialLogin('Facebook'),
-                        ),
-                        SizedBox(height: 4.h),
-
-                        // Sign Up Link
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              'New to PromoHub? ',
-                              style: AppTheme.lightTheme.textTheme.bodyMedium
-                                  ?.copyWith(
-                                color: AppTheme
-                                    .lightTheme.colorScheme.onSurfaceVariant,
-                              ),
-                            ),
-                            TextButton(
-                              onPressed: () {
-                                Navigator.pushNamed(
-                                    context, '/registration-screen');
-                              },
-                              style: TextButton.styleFrom(
-                                padding: EdgeInsets.zero,
-                                minimumSize: Size.zero,
-                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                              ),
-                              child: Text(
-                                'Sign Up',
-                                style: AppTheme.lightTheme.textTheme.bodyMedium
-                                    ?.copyWith(
-                                  color:
-                                      AppTheme.lightTheme.colorScheme.primary,
-                                  fontWeight: FontWeight.w600,
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.pushNamed(
+                                      context, '/registration-screen');
+                                },
+                                style: TextButton.styleFrom(
+                                  padding: EdgeInsets.zero,
+                                  minimumSize: Size.zero,
+                                  tapTargetSize:
+                                      MaterialTapTargetSize.shrinkWrap,
+                                ),
+                                child: Text(
+                                  'Sign Up',
+                                  style: AppTheme
+                                      .lightTheme.textTheme.bodyMedium
+                                      ?.copyWith(
+                                    color:
+                                        AppTheme.lightTheme.colorScheme.primary,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
                               ),
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: 2.h),
-                      ],
+                            ],
+                          ),
+                          SizedBox(height: 2.h),
+                        ],
+                      ),
                     ),
                   ),
                 ],

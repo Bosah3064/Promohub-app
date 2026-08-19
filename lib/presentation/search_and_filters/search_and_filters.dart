@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
 
 import '../../core/app_export.dart';
+import '../../services/marketplace_service.dart';
 import './widgets/apply_filters_widget.dart';
 import './widgets/barcode_scanner_widget.dart';
 import './widgets/category_filter_widget.dart';
@@ -24,6 +25,28 @@ class SearchAndFilters extends StatefulWidget {
 }
 
 class _SearchAndFiltersState extends State<SearchAndFilters> {
+  final MarketplaceService _marketplaceService = MarketplaceService();
+
+  Future<void> _updateResultCount() async {
+    try {
+      final results = await _marketplaceService.getListings(
+        searchQuery: _searchController.text.isNotEmpty ? _searchController.text : null,
+        minPrice: _currentMinPrice,
+        maxPrice: _currentMaxPrice,
+        condition: _selectedConditions.isNotEmpty ? _selectedConditions.first : null,
+        location: _selectedLocation,
+      );
+      if (mounted) {
+        setState(() {
+          _resultCount = results.length;
+        });
+    _updateResultCount();
+      }
+    } catch (e) {
+      if (mounted) setState(() => _resultCount = 0);
+    }
+  }
+
   final TextEditingController _searchController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
 
@@ -173,6 +196,7 @@ class _SearchAndFiltersState extends State<SearchAndFilters> {
   @override
   void initState() {
     super.initState();
+    _updateResultCount();
     _searchController.addListener(_onSearchChanged);
   }
 
@@ -191,6 +215,7 @@ class _SearchAndFiltersState extends State<SearchAndFilters> {
         _searchSuggestions = [];
         _showSuggestions = false;
       });
+    _updateResultCount();
       return;
     }
 
@@ -203,6 +228,7 @@ class _SearchAndFiltersState extends State<SearchAndFilters> {
       _searchSuggestions = suggestions;
       _showSuggestions = suggestions.isNotEmpty;
     });
+    _updateResultCount();
   }
 
   void _onSearchSubmitted(String query) {
@@ -217,6 +243,7 @@ class _SearchAndFiltersState extends State<SearchAndFilters> {
         }
       }
     });
+    _updateResultCount();
 
     _performSearch(query);
   }
@@ -235,6 +262,7 @@ class _SearchAndFiltersState extends State<SearchAndFilters> {
     setState(() {
       _recentSearches.remove(search);
     });
+    _updateResultCount();
   }
 
   void _onSuggestionTap(String suggestion) {
@@ -243,9 +271,15 @@ class _SearchAndFiltersState extends State<SearchAndFilters> {
   }
 
   void _onVoiceSearch() {
-    setState(() {
-      _showVoiceOverlay = true;
-    });
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => VoiceSearchOverlayWidget(
+        onVoiceResult: _onVoiceResult,
+        onClose: () => Navigator.pop(context),
+      ),
+    );
   }
 
   void _onVoiceResult(String result) {
@@ -257,12 +291,19 @@ class _SearchAndFiltersState extends State<SearchAndFilters> {
     setState(() {
       _showVoiceOverlay = false;
     });
+    _updateResultCount();
   }
 
   void _onBarcodeSearch() {
-    setState(() {
-      _showBarcodeScanner = true;
-    });
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => BarcodeScannerWidget(
+        onBarcodeScanned: _onBarcodeScanned,
+        onClose: () => Navigator.pop(context),
+      ),
+    );
   }
 
   void _onBarcodeScanned(String barcode) {
@@ -274,12 +315,19 @@ class _SearchAndFiltersState extends State<SearchAndFilters> {
     setState(() {
       _showBarcodeScanner = false;
     });
+    _updateResultCount();
   }
 
   void _onImageSearch() {
-    setState(() {
-      _showImageSearch = true;
-    });
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => ImageSearchWidget(
+        onImageSearchResult: _onImageSearchResult,
+        onClose: () => Navigator.pop(context),
+      ),
+    );
   }
 
   void _onImageSearchResult(String result) {
@@ -291,6 +339,7 @@ class _SearchAndFiltersState extends State<SearchAndFilters> {
     setState(() {
       _showImageSearch = false;
     });
+    _updateResultCount();
   }
 
   void _onClearSearch() {
@@ -298,18 +347,21 @@ class _SearchAndFiltersState extends State<SearchAndFilters> {
       _searchSuggestions = [];
       _showSuggestions = false;
     });
+    _updateResultCount();
   }
 
   void _toggleFilterSection(String filterName) {
     setState(() {
       _expandedFilters[filterName] = !(_expandedFilters[filterName] ?? false);
     });
+    _updateResultCount();
   }
 
   void _onCategoriesChanged(List<String> categories) {
     setState(() {
       _selectedCategories = categories;
     });
+    _updateResultCount();
   }
 
   void _onPriceRangeChanged(double minPrice, double maxPrice) {
@@ -317,30 +369,35 @@ class _SearchAndFiltersState extends State<SearchAndFilters> {
       _currentMinPrice = minPrice;
       _currentMaxPrice = maxPrice;
     });
+    _updateResultCount();
   }
 
   void _onLocationChanged(String? location) {
     setState(() {
       _selectedLocation = location;
     });
+    _updateResultCount();
   }
 
   void _onRadiusChanged(double radius) {
     setState(() {
       _selectedRadius = radius;
     });
+    _updateResultCount();
   }
 
   void _onConditionsChanged(List<String> conditions) {
     setState(() {
       _selectedConditions = conditions;
     });
+    _updateResultCount();
   }
 
   void _onDateRangeChanged(String? dateRange) {
     setState(() {
       _selectedDateRange = dateRange;
     });
+    _updateResultCount();
   }
 
   void _onApplyFilters() {
@@ -359,6 +416,7 @@ class _SearchAndFiltersState extends State<SearchAndFilters> {
       _selectedDateRange = null;
       _expandedFilters.updateAll((key, value) => false);
     });
+    _updateResultCount();
   }
 
   bool get _hasActiveFilters {
@@ -381,18 +439,7 @@ class _SearchAndFiltersState extends State<SearchAndFilters> {
     return count;
   }
 
-  int get _resultCount {
-    // Mock result count based on filters
-    int baseCount = 1247;
-    if (_selectedCategories.isNotEmpty) baseCount = (baseCount * 0.6).round();
-    if (_currentMinPrice != _minPrice || _currentMaxPrice != _maxPrice) {
-      baseCount = (baseCount * 0.8).round();
-    }
-    if (_selectedLocation != null) baseCount = (baseCount * 0.7).round();
-    if (_selectedConditions.isNotEmpty) baseCount = (baseCount * 0.9).round();
-    if (_selectedDateRange != null) baseCount = (baseCount * 0.85).round();
-    return baseCount;
-  }
+  int _resultCount = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -438,8 +485,9 @@ class _SearchAndFiltersState extends State<SearchAndFilters> {
             ),
         ],
       ),
-      body: Stack(
-        children: [
+      body: SafeArea(
+        child: Stack(
+          children: [
           Column(
             children: [
               // Search Input
@@ -593,27 +641,9 @@ class _SearchAndFiltersState extends State<SearchAndFilters> {
               ),
             ),
 
-          // Voice Search Overlay
-          if (_showVoiceOverlay)
-            VoiceSearchOverlayWidget(
-              onVoiceResult: _onVoiceResult,
-              onClose: _onCloseVoiceOverlay,
-            ),
-
-          // Barcode Scanner
-          if (_showBarcodeScanner)
-            BarcodeScannerWidget(
-              onBarcodeScanned: _onBarcodeScanned,
-              onClose: _onCloseBarcodeScanner,
-            ),
-
-          // Image Search
-          if (_showImageSearch)
-            ImageSearchWidget(
-              onImageSearchResult: _onImageSearchResult,
-              onClose: _onCloseImageSearch,
-            ),
+          
         ],
+        ),
       ),
     );
   }

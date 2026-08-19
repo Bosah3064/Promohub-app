@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:sizer/sizer.dart';
 
 import '../../core/app_export.dart';
+import '../../services/marketplace_service.dart';
 import './widgets/achievement_badges_widget.dart';
 import './widgets/active_listings_widget.dart';
 import './widgets/profile_header_widget.dart';
@@ -17,159 +20,130 @@ class UserProfile extends StatefulWidget {
 
 class _UserProfileState extends State<UserProfile> {
   final bool _isCurrentUser = true; // Toggle for viewing own profile vs others
+  
+  final MarketplaceService _marketplaceService = MarketplaceService();
 
-  // Mock user profile data
-  final Map<String, dynamic> userProfile = {
+  Map<String, dynamic>? _userShop;
+  bool _isLoadingShop = true;
+
+  // User profile data (starts with mock, updated in initState)
+  Map<String, dynamic> userProfile = {
     "id": "user_12345",
-    "name": "Amara Okafor",
+    "name": "User",
     "profileImage":
         "https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=400",
-    "memberSince": "January 2023",
-    "rating": 4.8,
-    "reviewCount": 127,
-    "isVerified": true,
-    "phoneVerified": true,
-    "emailVerified": true,
+    "memberSince": "Today",
+    "rating": 5.0,
+    "reviewCount": 0,
+    "isVerified": false,
+    "phoneVerified": false,
+    "emailVerified": false,
     "idVerified": false,
-    "bio":
-        "Passionate entrepreneur selling quality electronics and home goods. Fast shipping and excellent customer service guaranteed!",
-    "location": "Lagos, Nigeria",
+    "bio": "New to PromoHub!",
+    "location": "Not specified",
     "responseTime": "< 2 hours",
-    "languages": ["English", "Yoruba", "Hausa"],
+    "languages": ["English"],
   };
 
-  // Mock user statistics
-  final Map<String, dynamic> userStats = {
-    "totalListings": 45,
-    "successfulSales": 38,
-    "responseTime": "< 2 hours",
-    "userRating": 4.8,
-    "joinDate": "2023-01-15",
-    "lastActive": "2 hours ago",
+  @override
+  void initState() {
+    super.initState();
+    _loadUserShop();
+  }
+
+  Future<void> _loadUserShop() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      final userId = user?.uid;
+      
+      if (user != null) {
+        final email = user.email ?? 'No email';
+        final phone = user.phoneNumber ?? 'No phone';
+        final name = user.displayName ?? email.split('@')[0];
+        
+        setState(() {
+          userProfile['name'] = name;
+          userProfile['emailVerified'] = user.emailVerified;
+          userProfile['phoneVerified'] = phone != 'No phone';
+          userProfile['id'] = user.uid;
+        });
+      }
+
+      if (userId != null) {
+        final shop = await _marketplaceService.getUserShop(userId);
+        final listings = await _marketplaceService.getListingsBySellerId(userId);
+        if (mounted) {
+          setState(() {
+            _userShop = shop;
+            activeListings = listings;
+            userStats["totalListings"] = listings.length;
+            
+            // Format data for the UI
+            for (var i = 0; i < activeListings.length; i++) {
+                if (activeListings[i]['images'] != null && (activeListings[i]['images'] as List).isNotEmpty) {
+                    activeListings[i]['image'] = activeListings[i]['images'][0];
+                } else {
+                    activeListings[i]['image'] = 'https://images.unsplash.com/photo-1560393464-5c69a73c5770'; // fallback
+                }
+                
+                // Format price 
+                final price = activeListings[i]['price'];
+                activeListings[i]['price'] = '₦$price';
+                
+                // Add missing mock fields expected by the widget
+                activeListings[i]['views'] = activeListings[i]['view_count'] ?? 0;
+                activeListings[i]['likes'] = 0; 
+            }
+            
+            _isLoadingShop = false;
+          });
+        }
+      } else {
+        if (mounted) setState(() => _isLoadingShop = false);
+      }
+    } catch (e) {
+      if (mounted) setState(() => _isLoadingShop = false);
+    }
+  }
+
+  // User statistics
+  Map<String, dynamic> userStats = {
+    "totalListings": 0,
+    "successfulSales": 0,
+    "responseTime": "N/A",
+    "userRating": 0.0,
+    "joinDate": "Unknown",
+    "lastActive": "Just now",
   };
 
-  // Mock active listings
-  final List<Map<String, dynamic>> activeListings = [
-    {
-      "id": "listing_001",
-      "title": "iPhone 14 Pro Max - Excellent Condition",
-      "price": "₦850,000",
-      "image":
-          "https://images.pexels.com/photos/788946/pexels-photo-788946.jpeg?auto=compress&cs=tinysrgb&w=400",
-      "status": "Active",
-      "views": 234,
-      "likes": 18,
-      "datePosted": "2025-01-25",
-    },
-    {
-      "id": "listing_002",
-      "title": "Samsung 55\" 4K Smart TV",
-      "price": "₦420,000",
-      "image":
-          "https://images.pexels.com/photos/1201996/pexels-photo-1201996.jpeg?auto=compress&cs=tinysrgb&w=400",
-      "status": "Pending",
-      "views": 156,
-      "likes": 12,
-      "datePosted": "2025-01-22",
-    },
-    {
-      "id": "listing_003",
-      "title": "MacBook Air M2 - Like New",
-      "price": "₦1,200,000",
-      "image":
-          "https://images.pexels.com/photos/205421/pexels-photo-205421.jpeg?auto=compress&cs=tinysrgb&w=400",
-      "status": "Active",
-      "views": 89,
-      "likes": 7,
-      "datePosted": "2025-01-20",
-    },
-  ];
+  // Active listings
+  List<Map<String, dynamic>> activeListings = [];
 
-  // Mock reviews data
-  final List<Map<String, dynamic>> reviews = [
-    {
-      "id": "review_001",
-      "reviewerName": "Kemi Adebayo",
-      "reviewerAvatar":
-          "https://images.pexels.com/photos/1181686/pexels-photo-1181686.jpeg?auto=compress&cs=tinysrgb&w=400",
-      "rating": 5,
-      "comment":
-          "Excellent seller! The phone was exactly as described and shipping was super fast. Highly recommend!",
-      "date": "Jan 28, 2025",
-      "transaction": {
-        "itemName": "iPhone 13 Pro",
-        "itemImage":
-            "https://images.pexels.com/photos/788946/pexels-photo-788946.jpeg?auto=compress&cs=tinysrgb&w=400",
-        "price": "₦650,000",
-      },
-    },
-    {
-      "id": "review_002",
-      "reviewerName": "Chidi Okonkwo",
-      "reviewerAvatar":
-          "https://images.pexels.com/photos/1043471/pexels-photo-1043471.jpeg?auto=compress&cs=tinysrgb&w=400",
-      "rating": 4,
-      "comment":
-          "Good communication and fair pricing. Item arrived in good condition. Would buy again.",
-      "date": "Jan 25, 2025",
-      "transaction": {
-        "itemName": "Wireless Headphones",
-        "itemImage":
-            "https://images.pexels.com/photos/3394650/pexels-photo-3394650.jpeg?auto=compress&cs=tinysrgb&w=400",
-        "price": "₦45,000",
-      },
-    },
-    {
-      "id": "review_003",
-      "reviewerName": "Fatima Hassan",
-      "reviewerAvatar":
-          "https://images.pexels.com/photos/1181424/pexels-photo-1181424.jpeg?auto=compress&cs=tinysrgb&w=400",
-      "rating": 5,
-      "comment":
-          "Amazing seller! Very professional and the laptop works perfectly. Thank you!",
-      "date": "Jan 20, 2025",
-      "transaction": null,
-    },
-  ];
+  // Reviews data (empty state since we don't have review fetch implemented yet)
+  final List<Map<String, dynamic>> reviews = [];
 
-  // Mock rating breakdown
+  // Computed rating breakdown (empty state)
   final Map<String, dynamic> ratingBreakdown = {
-    "averageRating": 4.8,
-    "totalReviews": 127,
+    "averageRating": 0.0,
+    "totalReviews": 0,
     "breakdown": {
-      "5": 78.0,
-      "4": 15.0,
-      "3": 5.0,
-      "2": 1.5,
-      "1": 0.5,
+      "5": 0.0,
+      "4": 0.0,
+      "3": 0.0,
+      "2": 0.0,
+      "1": 0.0,
     },
   };
 
-  // Mock achievements
+  // Computed achievements
   final List<Map<String, dynamic>> achievements = [
-    {
-      "id": "badge_001",
-      "type": "top_seller",
-      "title": "Top Seller",
-      "description": "Sold 25+ items",
-      "icon": "trending_up",
-      "earnedDate": "2025-01-15",
-    },
-    {
-      "id": "badge_002",
-      "type": "quick_responder",
-      "title": "Quick Responder",
-      "description": "Responds within 2 hours",
-      "icon": "flash_on",
-      "earnedDate": "2025-01-10",
-    },
     {
       "id": "badge_003",
       "type": "trusted_buyer",
       "title": "Trusted Member",
       "description": "Verified account",
       "icon": "verified_user",
-      "earnedDate": "2025-01-05",
+      "earnedDate": DateTime.now().toString().split(' ')[0], // Computed basic badge
     },
   ];
 
@@ -186,6 +160,30 @@ class _UserProfileState extends State<UserProfile> {
               onProfileImageTap: _showFullScreenImage,
               onEditProfile: _editProfile,
             ),
+            SizedBox(height: 2.h),
+            if (!_isLoadingShop)
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 4.w),
+                child: SizedBox(
+                  width: double.infinity,
+                  height: 6.h,
+                  child: ElevatedButton.icon(
+                    icon: Icon(_userShop != null ? Icons.store : Icons.add_business),
+                    label: Text(_userShop != null ? 'Seller Dashboard' : 'Become a Seller'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.lightTheme.colorScheme.primary,
+                      foregroundColor: Colors.white,
+                    ),
+                    onPressed: () {
+                      if (_userShop != null) {
+                        Navigator.pushNamed(context, '/seller-dashboard', arguments: _userShop!['id']);
+                      } else {
+                        Navigator.pushNamed(context, '/seller-registration').then((_) => _loadUserShop());
+                      }
+                    },
+                  ),
+                ),
+              ),
             SizedBox(height: 3.h),
             StatisticsCardsWidget(userStats: userStats),
             SizedBox(height: 3.h),

@@ -1,59 +1,27 @@
-import './supabase_service.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import './firebase_service.dart';
 
 class LocationCurrencyService {
-  final SupabaseService _supabaseService = SupabaseService();
+  final FirebaseService _firebaseService = FirebaseService();
+  FirebaseFirestore get _firestore => _firebaseService.firestore;
 
-  // Add missing getAllCountries method
   Future<List<Map<String, dynamic>>> getAllCountries() async {
-    try {
-      final client = await _supabaseService.client;
-      final response = await client
-          .from('locations')
-          .select('country_code, country_name')
-          .eq('status', 'active')
-          .order('country_name');
-
-      // Remove duplicates based on country_code
-      final Map<String, Map<String, dynamic>> uniqueCountries = {};
-      for (final location in response) {
-        final countryCode = location['country_code'] as String;
-        if (!uniqueCountries.containsKey(countryCode)) {
-          uniqueCountries[countryCode] = {
-            'country_code': countryCode,
-            'country_name': location['country_name'],
-          };
-        }
-      }
-
-      return uniqueCountries.values.toList();
-    } catch (error) {
-      throw Exception('Failed to fetch all countries: $error');
-    }
+    return getCountries();
   }
 
-  // Add missing getAllCurrencies method
   Future<List<Map<String, dynamic>>> getAllCurrencies() async {
-    try {
-      final response = await _supabaseService.selectRows(
-        'currencies',
-        filters: {'status': 'active'},
-        orderBy: 'code',
-      );
-      return List<Map<String, dynamic>>.from(response);
-    } catch (error) {
-      throw Exception('Failed to fetch all currencies: $error');
-    }
+    return getCurrencies();
   }
 
   // Fetch all active currencies
   Future<List<Map<String, dynamic>>> getCurrencies() async {
     try {
-      final response = await _supabaseService.selectRows(
-        'currencies',
-        filters: {'status': 'active'},
-        orderBy: 'code',
-      );
-      return List<Map<String, dynamic>>.from(response);
+      final snapshot = await _firestore
+          .collection('currencies')
+          .where('status', isEqualTo: 'active')
+          .orderBy('code')
+          .get();
+      return snapshot.docs.map((doc) => {'id': doc.id, ...doc.data()}).toList();
     } catch (error) {
       throw Exception('Failed to fetch currencies: $error');
     }
@@ -62,12 +30,12 @@ class LocationCurrencyService {
   // Fetch all active locations
   Future<List<Map<String, dynamic>>> getLocations() async {
     try {
-      final response = await _supabaseService.selectRows(
-        'locations',
-        filters: {'status': 'active'},
-        orderBy: 'country_name',
-      );
-      return List<Map<String, dynamic>>.from(response);
+      final snapshot = await _firestore
+          .collection('locations')
+          .where('status', isEqualTo: 'active')
+          .orderBy('country_name')
+          .get();
+      return snapshot.docs.map((doc) => {'id': doc.id, ...doc.data()}).toList();
     } catch (error) {
       throw Exception('Failed to fetch locations: $error');
     }
@@ -77,12 +45,13 @@ class LocationCurrencyService {
   Future<List<Map<String, dynamic>>> getLocationsByCountry(
       String countryCode) async {
     try {
-      final response = await _supabaseService.selectRows(
-        'locations',
-        filters: {'country_code': countryCode, 'status': 'active'},
-        orderBy: 'city_name',
-      );
-      return List<Map<String, dynamic>>.from(response);
+      final snapshot = await _firestore
+          .collection('locations')
+          .where('country_code', isEqualTo: countryCode)
+          .where('status', isEqualTo: 'active')
+          .orderBy('city_name')
+          .get();
+      return snapshot.docs.map((doc) => {'id': doc.id, ...doc.data()}).toList();
     } catch (error) {
       throw Exception('Failed to fetch locations by country: $error');
     }
@@ -91,18 +60,31 @@ class LocationCurrencyService {
   // Get user preferences
   Future<Map<String, dynamic>?> getUserPreferences(String userId) async {
     try {
-      final response = await _supabaseService.selectRows(
-        'user_preferences',
-        select: '''
-          *,
-          preferred_currency_id:currencies(id, code, name, symbol),
-          preferred_location_id:locations(id, country_name, city_name)
-        ''',
-        filters: {'user_id': userId},
-      );
-      return response.isNotEmpty
-          ? Map<String, dynamic>.from(response.first)
-          : null;
+      final snapshot = await _firestore
+          .collection('user_preferences')
+          .where('user_id', isEqualTo: userId)
+          .limit(1)
+          .get();
+
+      if (snapshot.docs.isEmpty) return null;
+
+      var prefs = {'id': snapshot.docs.first.id, ...snapshot.docs.first.data()};
+
+      if (prefs['preferred_currency_id'] != null) {
+        final currencyDoc = await _firestore.collection('currencies').doc(prefs['preferred_currency_id']).get();
+        if (currencyDoc.exists) {
+          prefs['preferred_currency_id'] = {'id': currencyDoc.id, ...?currencyDoc.data()};
+        }
+      }
+
+      if (prefs['preferred_location_id'] != null) {
+        final locationDoc = await _firestore.collection('locations').doc(prefs['preferred_location_id']).get();
+        if (locationDoc.exists) {
+          prefs['preferred_location_id'] = {'id': locationDoc.id, ...?locationDoc.data()};
+        }
+      }
+
+      return prefs;
     } catch (error) {
       throw Exception('Failed to fetch user preferences: $error');
     }
@@ -136,41 +118,43 @@ class LocationCurrencyService {
         updates['push_notifications'] = pushNotifications;
       }
 
-      updates['updated_at'] = DateTime.now().toIso8601String();
+      updates['updated_at'] = FieldValue.serverTimestamp();
 
-      // Try to update existing preferences
-      final existingPrefs = await getUserPreferences(userId);
+      final snapshot = await _firestore
+          .collection('user_preferences')
+          .where('user_id', isEqualTo: userId)
+          .limit(1)
+          .get();
 
-      if (existingPrefs != null) {
-        final response = await _supabaseService.updateRow(
-          'user_preferences',
-          updates,
-          'user_id',
-          userId,
-        );
-        return Map<String, dynamic>.from(response.first);
+      if (snapshot.docs.isNotEmpty) {
+        await snapshot.docs.first.reference.update(updates);
+        final doc = await snapshot.docs.first.reference.get();
+        return {'id': doc.id, ...?doc.data()};
       } else {
-        // Create new preferences if none exist
         updates['user_id'] = userId;
-        final response =
-            await _supabaseService.insertRow('user_preferences', updates);
-        return Map<String, dynamic>.from(response.first);
+        updates['created_at'] = FieldValue.serverTimestamp();
+        final docRef = await _firestore.collection('user_preferences').add(updates);
+        return {'id': docRef.id, ...updates};
       }
     } catch (error) {
       throw Exception('Failed to update user preferences: $error');
     }
   }
 
-  // Get base currency (for conversion calculations)
+  // Get base currency
   Future<Map<String, dynamic>?> getBaseCurrency() async {
     try {
-      final response = await _supabaseService.selectRows(
-        'currencies',
-        filters: {'is_base': true, 'status': 'active'},
-      );
-      return response.isNotEmpty
-          ? Map<String, dynamic>.from(response.first)
-          : null;
+      final snapshot = await _firestore
+          .collection('currencies')
+          .where('is_base', isEqualTo: true)
+          .where('status', isEqualTo: 'active')
+          .limit(1)
+          .get();
+          
+      if (snapshot.docs.isNotEmpty) {
+        return {'id': snapshot.docs.first.id, ...snapshot.docs.first.data()};
+      }
+      return null;
     } catch (error) {
       throw Exception('Failed to fetch base currency: $error');
     }
@@ -182,20 +166,16 @@ class LocationCurrencyService {
     try {
       if (fromCurrencyId == toCurrencyId) return amount;
 
-      final fromCurrency = await _supabaseService
-          .selectRows('currencies', filters: {'id': fromCurrencyId});
+      final fromDoc = await _firestore.collection('currencies').doc(fromCurrencyId).get();
+      final toDoc = await _firestore.collection('currencies').doc(toCurrencyId).get();
 
-      final toCurrency = await _supabaseService
-          .selectRows('currencies', filters: {'id': toCurrencyId});
-
-      if (fromCurrency.isEmpty || toCurrency.isEmpty) {
+      if (!fromDoc.exists || !toDoc.exists) {
         throw Exception('Currency not found');
       }
 
-      final fromRate = fromCurrency.first['exchange_rate'] as double;
-      final toRate = toCurrency.first['exchange_rate'] as double;
+      final fromRate = (fromDoc.data()!['exchange_rate'] as num).toDouble();
+      final toRate = (toDoc.data()!['exchange_rate'] as num).toDouble();
 
-      // Convert to base currency first, then to target currency
       final baseAmount = amount / fromRate;
       return baseAmount * toRate;
     } catch (error) {
@@ -203,24 +183,23 @@ class LocationCurrencyService {
     }
   }
 
-  // Get countries list (unique countries from locations)
+  // Get countries list
   Future<List<Map<String, dynamic>>> getCountries() async {
     try {
-      final client = await _supabaseService.client;
-      final response = await client
-          .from('locations')
-          .select('country_code, country_name')
-          .eq('status', 'active')
-          .order('country_name');
+      final snapshot = await _firestore
+          .collection('locations')
+          .where('status', isEqualTo: 'active')
+          .orderBy('country_name')
+          .get();
 
-      // Remove duplicates based on country_code
       final Map<String, Map<String, dynamic>> uniqueCountries = {};
-      for (final location in response) {
-        final countryCode = location['country_code'] as String;
+      for (final doc in snapshot.docs) {
+        final data = doc.data();
+        final countryCode = data['country_code'] as String;
         if (!uniqueCountries.containsKey(countryCode)) {
           uniqueCountries[countryCode] = {
             'country_code': countryCode,
-            'country_name': location['country_name'],
+            'country_name': data['country_name'],
           };
         }
       }

@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart'; // Add this for environment variables
 
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 import './core/app_export.dart';
-import './services/supabase_service.dart';
+import './services/firebase_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -11,12 +13,16 @@ Future<void> main() async {
   // Load environment variables
   await dotenv.load(fileName: ".env");
 
-  // Initialize Supabase with better error handling
+  // Initialize Firebase with better error handling
   try {
-    await SupabaseService().client; // Ensure client is initialized
-    debugPrint('Supabase initialized successfully');
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    // Initialize our singleton
+    FirebaseService(); 
+    debugPrint('Firebase initialized successfully');
   } catch (e) {
-    debugPrint('Failed to initialize Supabase: $e');
+    debugPrint('Failed to initialize Firebase: $e');
     // Consider showing an error screen or retry mechanism in production
   }
 

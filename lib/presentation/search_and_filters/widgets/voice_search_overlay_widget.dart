@@ -173,86 +173,93 @@ class _VoiceSearchOverlayWidgetState extends State<VoiceSearchOverlayWidget>
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.black.withValues(alpha: 0.7),
-      child: Center(
-        child: ScaleTransition(
-          scale: _scaleAnimation,
-          child: Container(
-            width: 80.w,
-            padding: EdgeInsets.all(6.w),
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.only(
+        left: 6.w, 
+        right: 6.w, 
+        top: 6.w, 
+        bottom: MediaQuery.of(context).padding.bottom + 6.w,
+      ),
+      decoration: BoxDecoration(
+        color: AppTheme.lightTheme.colorScheme.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24.0)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 12.w,
+            height: 0.6.h,
+            margin: EdgeInsets.only(bottom: 4.h),
             decoration: BoxDecoration(
-              color: AppTheme.lightTheme.colorScheme.surface,
-              borderRadius: BorderRadius.circular(20.0),
-              boxShadow: [
-                BoxShadow(
-                  color: AppTheme.lightTheme.shadowColor,
-                  blurRadius: 20.0,
-                  offset: const Offset(0, 10),
-                ),
-              ],
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Voice Search',
-                      style: AppTheme.lightTheme.textTheme.titleLarge?.copyWith(
-                        color: AppTheme.lightTheme.colorScheme.onSurface,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: _closeOverlay,
-                      child: CustomIconWidget(
-                        iconName: 'close',
-                        color: AppTheme.lightTheme.colorScheme.onSurfaceVariant,
-                        size: 24,
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 4.h),
-                _buildRecordingIndicator(),
-                SizedBox(height: 4.h),
-                Text(
-                  _getStatusText(),
-                  style: AppTheme.lightTheme.textTheme.bodyMedium?.copyWith(
-                    color: AppTheme.lightTheme.colorScheme.onSurfaceVariant,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(height: 3.h),
-                if (_isRecording)
-                  ElevatedButton(
-                    onPressed: _stopRecording,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.lightTheme.colorScheme.error,
-                      foregroundColor: AppTheme.lightTheme.colorScheme.onError,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12.0),
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        CustomIconWidget(
-                          iconName: 'stop',
-                          color: AppTheme.lightTheme.colorScheme.onError,
-                          size: 18,
-                        ),
-                        SizedBox(width: 2.w),
-                        Text('Stop Recording'),
-                      ],
-                    ),
-                  ),
-              ],
+              color: AppTheme.lightTheme.dividerColor,
+              borderRadius: BorderRadius.circular(10),
             ),
           ),
-        ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Voice Search',
+                style: AppTheme.lightTheme.textTheme.titleLarge?.copyWith(
+                  color: AppTheme.lightTheme.colorScheme.onSurface,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              GestureDetector(
+                onTap: _closeOverlay,
+                child: CustomIconWidget(
+                  iconName: 'close',
+                  color: AppTheme.lightTheme.colorScheme.onSurfaceVariant,
+                  size: 24,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 5.h),
+          _buildRecordingIndicator(),
+          SizedBox(height: 5.h),
+          Text(
+            _getStatusText(),
+            style: AppTheme.lightTheme.textTheme.bodyMedium?.copyWith(
+              color: AppTheme.lightTheme.colorScheme.onSurfaceVariant,
+              fontSize: 12.sp,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          SizedBox(height: 4.h),
+          if (_isRecording)
+            ElevatedButton(
+              onPressed: _stopRecording,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.lightTheme.colorScheme.error,
+                foregroundColor: AppTheme.lightTheme.colorScheme.onError,
+                padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 1.5.h),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16.0),
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CustomIconWidget(
+                    iconName: 'stop',
+                    color: AppTheme.lightTheme.colorScheme.onError,
+                    size: 18,
+                  ),
+                  SizedBox(width: 2.w),
+                  Text(
+                    'Stop Recording',
+                    style: AppTheme.lightTheme.textTheme.titleSmall?.copyWith(
+                      color: AppTheme.lightTheme.colorScheme.onError,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+        ],
       ),
     );
   }

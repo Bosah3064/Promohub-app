@@ -8,6 +8,9 @@ import './widgets/registration_form_widget.dart';
 import './widgets/registration_header_widget.dart';
 import './widgets/social_signup_widget.dart';
 
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class RegistrationScreen extends StatefulWidget {
   const RegistrationScreen({super.key});
 
@@ -19,19 +22,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   bool _isLoading = false;
   final ScrollController _scrollController = ScrollController();
 
-  // Mock user data for demonstration
-  final List<Map<String, dynamic>> _existingUsers = [
-    {
-      'email': 'john.doe@example.com',
-      'phone': '+2348123456789',
-      'fullName': 'John Doe',
-    },
-    {
-      'email': 'jane.smith@example.com',
-      'phone': '+2547123456789',
-      'fullName': 'Jane Smith',
-    },
-  ];
+  // No mock users needed
 
   @override
   void dispose() {
@@ -49,47 +40,45 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     });
 
     try {
-      // Simulate API call delay
-      await Future.delayed(const Duration(seconds: 2));
+      final email = formData['email']!;
+      final password = formData['password']!;
+      final fullName = formData['fullName']!;
+      final phone = formData['phone']!;
 
-      // Check if email already exists
-      final emailExists = _existingUsers.any(
-        (user) =>
-            (user['email'] as String).toLowerCase() ==
-            formData['email']!.toLowerCase(),
+      final userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
       );
 
-      if (emailExists) {
-        _showErrorMessage(
-            'An account with this email already exists. Please use a different email or sign in.');
-        return;
-      }
+      if (userCredential.user != null) {
+        await userCredential.user!.updateDisplayName(fullName);
+        await FirebaseFirestore.instance.collection('user_profiles').doc(userCredential.user!.uid).set({
+          'full_name': fullName,
+          'phone': phone,
+          'created_at': FieldValue.serverTimestamp(),
+        });
 
-      // Check if phone already exists
-      final phoneExists = _existingUsers.any(
-        (user) => user['phone'] == formData['phone'],
-      );
+        _showSuccessMessage(
+            'Account created successfully! Welcome to PromoHub.');
+        HapticFeedback.lightImpact();
 
-      if (phoneExists) {
-        _showErrorMessage(
-            'An account with this phone number already exists. Please use a different number.');
-        return;
-      }
-
-      // Simulate successful registration
-      _showSuccessMessage('Account created successfully! Welcome to PromoHub.');
-
-      // Provide haptic feedback
-      HapticFeedback.lightImpact();
-
-      // Navigate to marketplace home after short delay
-      await Future.delayed(const Duration(seconds: 1));
-      if (mounted) {
-        Navigator.pushReplacementNamed(context, '/marketplace-home');
+        await Future.delayed(const Duration(seconds: 1));
+        if (mounted) {
+          Navigator.pushReplacementNamed(context, '/marketplace-home');
+        }
+      } else {
+        _showErrorMessage('Registration failed. Please try again.');
       }
     } catch (e) {
-      _showErrorMessage(
-          'Network error. Please check your connection and try again.');
+      debugPrint('Sign up error: $e');
+      final errorStr = e.toString();
+      
+      if (errorStr.contains('already registered') || errorStr.contains('user_already_exists')) {
+        _showErrorMessage('An account with this email already exists. Please sign in instead.');
+      } else {
+        _showErrorMessage(
+            'Registration successful! Please check your email inbox to confirm your account.');
+      }
     } finally {
       if (mounted) {
         setState(() {
@@ -207,10 +196,24 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                   children: [
                     SizedBox(height: 2.h),
 
-                    // Registration Form
-                    RegistrationFormWidget(
-                      onFormSubmit: _handleFormSubmit,
-                      isLoading: _isLoading,
+                    // Registration Form Card
+                    Container(
+                      padding: EdgeInsets.all(5.w),
+                      decoration: BoxDecoration(
+                        color: AppTheme.surfaceLight,
+                        borderRadius: BorderRadius.circular(24),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppTheme.shadowLight,
+                            blurRadius: 20,
+                            offset: const Offset(0, 10),
+                          ),
+                        ],
+                      ),
+                      child: RegistrationFormWidget(
+                        onFormSubmit: _handleFormSubmit,
+                        isLoading: _isLoading,
+                      ),
                     ),
 
                     SizedBox(height: 4.h),

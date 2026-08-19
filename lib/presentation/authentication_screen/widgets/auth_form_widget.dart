@@ -195,12 +195,7 @@ class _AuthFormWidgetState extends State<AuthFormWidget> {
                 alignment: Alignment.centerRight,
                 child: TextButton(
                   onPressed: () {
-                    // Handle forgot password
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Password reset link sent to your email'),
-                      ),
-                    );
+                    Navigator.pushNamed(context, '/forgot-password');
                   },
                   child: Text(
                     'Forgot Password?',

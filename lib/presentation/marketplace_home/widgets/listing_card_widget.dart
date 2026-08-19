@@ -80,6 +80,29 @@ class ListingCardWidget extends StatelessWidget {
                 ],
               ),
             ),
+            // Promoted Banner
+            if (listing['isSponsored'] == true)
+              Container(
+                width: double.infinity,
+                padding: EdgeInsets.symmetric(vertical: 0.5.h),
+                color: AppTheme.secondaryLight.withValues(alpha: 0.15),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.auto_awesome, size: 12, color: AppTheme.secondaryLight),
+                    SizedBox(width: 4),
+                    Text(
+                      'PROMOTED',
+                      style: TextStyle(
+                        fontSize: 9.sp,
+                        fontWeight: FontWeight.w800,
+                        color: AppTheme.secondaryLight,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             Expanded(
               flex: 2,
               child: Padding(

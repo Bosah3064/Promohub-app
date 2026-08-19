@@ -202,7 +202,7 @@ class ManualLocationWidget extends StatelessWidget {
             ),
           ),
           child: DropdownButtonFormField<String>(
-            value: selectedCity,
+            initialValue: selectedCity,
             decoration: InputDecoration(
               hintText: selectedRegion != null
                   ? 'Select your city'

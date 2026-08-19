@@ -2,11 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:sizer/sizer.dart';
-
 import '../../core/app_export.dart';
+import '../../services/marketplace_service.dart';
 import './widgets/action_buttons_widget.dart';
 import './widgets/image_gallery_widget.dart';
-import './widgets/make_offer_bottom_sheet.dart';
 import './widgets/product_details_widget.dart';
 import './widgets/safety_tips_banner_widget.dart';
 import './widgets/seller_info_card_widget.dart';
@@ -20,118 +19,183 @@ class ListingDetail extends StatefulWidget {
 }
 
 class _ListingDetailState extends State<ListingDetail> {
+  final MarketplaceService _marketplaceService = MarketplaceService();
+  bool _isLoading = true;
+  bool _hasError = false;
+  bool _isAddingToCart = false;
   bool _isFavorite = false;
-  late Map<String, dynamic> _currentListing;
-  late Map<String, dynamic> _seller;
-  late List<Map<String, dynamic>> _similarListings;
+  Map<String, dynamic> _currentListing = {};
+  Map<String, dynamic> _seller = {};
+  List<Map<String, dynamic>> _similarListings = [];
 
   @override
   void initState() {
     super.initState();
-    _initializeData();
+    // Defer so we can access ModalRoute.of(context)
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadData());
   }
 
-  void _initializeData() {
-    _currentListing = {
-      "id": "PH001",
-      "title": "iPhone 14 Pro Max - 256GB Space Black",
-      "price": "\$1,200",
-      "originalPrice": "\$1,399",
-      "description":
-          """Excellent condition iPhone 14 Pro Max with 256GB storage in Space Black. 
-      
-This phone has been my daily driver for 8 months and is in pristine condition. Always kept in a case with screen protector. Battery health is at 94%. 
+  Future<void> _loadData() async {
+    final listingId = ModalRoute.of(context)?.settings.arguments as String?;
 
-Includes:
-- Original box and documentation
-- Lightning to USB-C cable
-- 20W USB-C power adapter
-- Clear case and screen protector (already applied)
+    if (listingId != null && listingId.isNotEmpty) {
+      try {
+        final listing = await _marketplaceService.getListing(listingId);
+        if (listing != null && mounted) {
+          final sellerData =
+              listing['seller_id'] as Map<String, dynamic>? ?? {};
+          setState(() {
+            _currentListing = {
+              "id": listing['id'],
+              "title": listing['title'] ?? 'Product',
+              "price": 'KSh ${listing['price']}',
+              "description": listing['description'] ?? '',
+              "category": (listing['category_id'] is Map)
+                  ? listing['category_id']['name']
+                  : 'General',
+              "condition": listing['condition'] ?? 'Used',
+              "location": listing['location'] ?? '',
+              "postedDate": 'Recently',
+              "viewCount": listing['views'] ?? 0,
+              "listingId": listing['id'],
+              "images": (listing['images'] as List?)?.cast<String>() ??
+                  [
+                    "https://images.pexels.com/photos/788946/pexels-photo-788946.jpeg?auto=compress&cs=tinysrgb&w=800",
+                  ],
+            };
+            _seller = {
+              "id": sellerData['id'] ?? '',
+              "name": sellerData['full_name'] ?? 'Seller',
+              "profileImage": sellerData['avatar_url'] ?? '',
+              "rating": sellerData['rating'] ?? 0,
+              "reviewCount": 0,
+              "isVerified": true,
+              "responseTime": "< 1 hour",
+              "phoneNumber": sellerData['phone'] ?? '',
+              "memberSince": "2024",
+              "totalListings": 0,
+            };
+            _isLoading = false;
+          });
+          // Load similar listings in background
+          _loadSimilarListings(listing['category_id'] is Map
+              ? listing['category_id']['id']
+              : null);
+          return;
+        }
+      } catch (e) {
+        debugPrint('Failed to load listing: $e');
+      }
+    }
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+        _hasError = true;
+      });
+    }
+}
 
-No scratches, dents, or damage. Fully unlocked and works with all carriers. Perfect for someone looking for a premium iPhone at a great price.
+  Future<void> _loadSimilarListings(String? categoryId) async {
+    try {
+      final listings = await _marketplaceService.getListings(
+        categoryId: categoryId,
+        limit: 4,
+      );
+      if (mounted) {
+        setState(() {
+          _similarListings = listings
+              .where((l) => l['id'] != _currentListing['id'])
+              .take(3)
+              .map((l) {
+            return {
+              "id": l['id'],
+              "title": l['title'],
+              "price": 'KSh ${l['price']}',
+              "location": l['location'] ?? '',
+              "postedDate": "Recently",
+              "images": (l['images'] as List?)?.isNotEmpty == true
+                  ? [l['images'][0]]
+                  : [
+                      "https://images.pexels.com/photos/788946/pexels-photo-788946.jpeg?auto=compress&cs=tinysrgb&w=400"
+                    ],
+            };
+          }).toList();
+        });
+      }
+    } catch (e) {
+      // Keep similar listings empty on error
+    }
+  }
 
-Reason for selling: Upgrading to iPhone 15 Pro Max.""",
-      "translatedDescription":
-          """Excellent condition iPhone 14 Pro Max na 256GB hifadhi katika Space Black.
+  
 
-Simu hii imekuwa simu yangu ya kila siku kwa miezi 8 na iko katika hali nzuri sana. Daima imehifadhiwa katika kesi na kinga ya skrini. Afya ya betri iko 94%.
+  Future<void> _addToCart() async {
+    setState(() => _isAddingToCart = true);
+    try {
+      await _marketplaceService.addToCart(_currentListing['id'], 1);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Added to cart'),
+            action: SnackBarAction(
+              label: 'VIEW CART',
+              onPressed: () => Navigator.pushNamed(context, '/cart'),
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to add to cart')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isAddingToCart = false);
+    }
+  }
 
-Inajumuisha:
-- Sanduku la asili na nyaraka
-- Kebo ya Lightning hadi USB-C
-- Adapta ya nguvu ya 20W USB-C
-- Kesi wazi na kinga ya skrini (tayari imewekwa)
-
-Hakuna michubuko, mikunjo, au uharibifu. Imefunguliwa kabisa na inafanya kazi na wauzaji wote. Kamili kwa mtu anayetafuta iPhone ya hali ya juu kwa bei nzuri.
-
-Sababu ya kuuza: Kuboresha hadi iPhone 15 Pro Max.""",
-      "category": "Electronics",
-      "condition": "Like New",
-      "location": "Lagos, Nigeria",
-      "distance": "2.5 km",
-      "mapThumbnail":
-          "https://images.pexels.com/photos/2034851/pexels-photo-2034851.jpeg?auto=compress&cs=tinysrgb&w=400",
-      "postedDate": "3 days ago",
-      "viewCount": 247,
-      "listingId": "PH001",
-      "images": [
-        "https://images.pexels.com/photos/788946/pexels-photo-788946.jpeg?auto=compress&cs=tinysrgb&w=800",
-        "https://images.pexels.com/photos/1275229/pexels-photo-1275229.jpeg?auto=compress&cs=tinysrgb&w=800",
-        "https://images.pexels.com/photos/3999538/pexels-photo-3999538.jpeg?auto=compress&cs=tinysrgb&w=800",
-        "https://images.pexels.com/photos/1092644/pexels-photo-1092644.jpeg?auto=compress&cs=tinysrgb&w=800",
-      ],
-    };
-
-    _seller = {
-      "id": "seller_001",
-      "name": "Adebayo Johnson",
-      "profileImage":
-          "https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=400",
-      "rating": 4.8,
-      "reviewCount": 156,
-      "isVerified": true,
-      "responseTime": "2 hours",
-      "phoneNumber": "+234 801 234 5678",
-      "memberSince": "2021",
-      "totalListings": 23,
-    };
-
-    _similarListings = [
-      {
-        "id": "PH002",
-        "title": "iPhone 13 Pro - 128GB Blue",
-        "price": "\$950",
-        "location": "Abuja, Nigeria",
-        "postedDate": "1 day ago",
-        "images": [
-          "https://images.pexels.com/photos/1275229/pexels-photo-1275229.jpeg?auto=compress&cs=tinysrgb&w=400"
-        ],
-      },
-      {
-        "id": "PH003",
-        "title": "Samsung Galaxy S23 Ultra",
-        "price": "\$1,100",
-        "location": "Port Harcourt, Nigeria",
-        "postedDate": "5 days ago",
-        "images": [
-          "https://images.pexels.com/photos/3999538/pexels-photo-3999538.jpeg?auto=compress&cs=tinysrgb&w=400"
-        ],
-      },
-      {
-        "id": "PH004",
-        "title": "iPhone 14 - 128GB Purple",
-        "price": "\$850",
-        "location": "Kano, Nigeria",
-        "postedDate": "1 week ago",
-        "images": [
-          "https://images.pexels.com/photos/788946/pexels-photo-788946.jpeg?auto=compress&cs=tinysrgb&w=400"
-        ],
-      },
-    ];
+  Future<void> _buyNow() async {
+    await _addToCart();
+    if (mounted) {
+      Navigator.pushNamed(context, '/checkout');
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_hasError) {
+      return Scaffold(
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          foregroundColor: AppTheme.textPrimaryLight,
+        ),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.error_outline, size: 64, color: AppTheme.lightTheme.colorScheme.error),
+              SizedBox(height: 16),
+              Text('Failed to load listing', style: AppTheme.lightTheme.textTheme.titleMedium),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (_isLoading) {
+      return Scaffold(
+        backgroundColor: AppTheme.lightTheme.scaffoldBackgroundColor,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          foregroundColor: AppTheme.textPrimaryLight,
+        ),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
     return Scaffold(
       backgroundColor: AppTheme.lightTheme.scaffoldBackgroundColor,
       body: Column(
@@ -188,10 +252,12 @@ Sababu ya kuuza: Kuboresha hadi iPhone 15 Pro Max.""",
           // Action Buttons
           ActionButtonsWidget(
             seller: _seller,
+            isAddingToCart: _isAddingToCart,
             onMessageSeller: () {
               Navigator.pushNamed(context, '/messages-and-chat');
             },
-            onMakeOffer: _showMakeOfferBottomSheet,
+            onAddToCart: _addToCart,
+            onBuyNow: _buyNow,
           ),
         ],
       ),
@@ -514,25 +580,6 @@ Download PromoHub to see more details and contact the seller.
           borderRadius: BorderRadius.circular(12),
         ),
         margin: EdgeInsets.all(4.w),
-      ),
-    );
-  }
-
-  void _showMakeOfferBottomSheet() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom,
-        ),
-        child: MakeOfferBottomSheet(
-          currentPrice: _currentListing["price"] as String,
-          onOfferSubmitted: () {
-            // Handle offer submission
-          },
-        ),
       ),
     );
   }

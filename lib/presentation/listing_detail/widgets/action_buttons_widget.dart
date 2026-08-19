@@ -1,32 +1,37 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:sizer/sizer.dart';
-import 'package:url_launcher/url_launcher.dart';
-
 import '../../../../core/app_export.dart';
+import '../../../../theme/app_theme.dart';
 
 class ActionButtonsWidget extends StatelessWidget {
   final Map<String, dynamic> seller;
+  final VoidCallback onAddToCart;
+  final VoidCallback onBuyNow;
   final VoidCallback onMessageSeller;
-  final VoidCallback onMakeOffer;
+  final bool isAddingToCart;
 
   const ActionButtonsWidget({
     super.key,
     required this.seller,
+    required this.onAddToCart,
+    required this.onBuyNow,
     required this.onMessageSeller,
-    required this.onMakeOffer,
+    this.isAddingToCart = false,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.all(4.w),
+      padding: EdgeInsets.fromLTRB(4.w, 2.h, 4.w, 3.h),
       decoration: BoxDecoration(
-        color: AppTheme.lightTheme.colorScheme.surface,
+        color: AppTheme.cardLight,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         boxShadow: [
           BoxShadow(
-            color: AppTheme.lightTheme.colorScheme.shadow,
-            blurRadius: 8,
-            offset: Offset(0, -2),
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 20,
+            offset: Offset(0, -4),
           ),
         ],
       ),
@@ -37,57 +42,48 @@ class ActionButtonsWidget extends StatelessWidget {
             Row(
               children: [
                 Expanded(
-                  flex: 2,
-                  child: ElevatedButton.icon(
+                  child: OutlinedButton.icon(
                     onPressed: onMessageSeller,
-                    icon: CustomIconWidget(
-                      iconName: 'message',
-                      color: Colors.white,
-                      size: 5.w,
-                    ),
+                    icon: Icon(Icons.chat_bubble_outline, color: AppTheme.primaryLight, size: 20),
                     label: Text(
-                      'Message Seller',
-                      style:
-                          AppTheme.lightTheme.textTheme.titleMedium?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
+                      'Chat',
+                      style: TextStyle(
+                        color: AppTheme.primaryLight,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 12.sp,
                       ),
                     ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.lightTheme.colorScheme.primary,
+                    style: OutlinedButton.styleFrom(
                       padding: EdgeInsets.symmetric(vertical: 2.h),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
+                      side: BorderSide(color: AppTheme.primaryLight.withValues(alpha: 0.3), width: 1.5),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                     ),
                   ),
                 ),
                 SizedBox(width: 3.w),
                 Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () => _callSeller(context),
-                    icon: CustomIconWidget(
-                      iconName: 'phone',
-                      color: AppTheme.lightTheme.colorScheme.primary,
-                      size: 5.w,
-                    ),
+                  flex: 2,
+                  child: ElevatedButton.icon(
+                    onPressed: isAddingToCart ? null : () {
+                      HapticFeedback.mediumImpact();
+                      onAddToCart();
+                    },
+                    icon: isAddingToCart 
+                      ? SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.primaryLight))
+                      : Icon(Icons.add_shopping_cart, color: AppTheme.primaryLight, size: 20),
                     label: Text(
-                      'Call',
-                      style:
-                          AppTheme.lightTheme.textTheme.titleMedium?.copyWith(
-                        color: AppTheme.lightTheme.colorScheme.primary,
-                        fontWeight: FontWeight.w600,
+                      isAddingToCart ? 'Adding...' : 'Add to Cart',
+                      style: TextStyle(
+                        color: AppTheme.primaryLight,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 12.sp,
                       ),
                     ),
-                    style: OutlinedButton.styleFrom(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.primaryLight.withValues(alpha: 0.1),
                       padding: EdgeInsets.symmetric(vertical: 2.h),
-                      side: BorderSide(
-                        color: AppTheme.lightTheme.colorScheme.primary,
-                        width: 2,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                     ),
                   ),
                 ),
@@ -96,30 +92,25 @@ class ActionButtonsWidget extends StatelessWidget {
             SizedBox(height: 2.h),
             SizedBox(
               width: double.infinity,
-              child: TextButton.icon(
-                onPressed: onMakeOffer,
-                icon: CustomIconWidget(
-                  iconName: 'local_offer',
-                  color: AppTheme.lightTheme.colorScheme.secondary,
-                  size: 5.w,
+              height: 6.5.h,
+              child: ElevatedButton(
+                onPressed: () {
+                  HapticFeedback.heavyImpact();
+                  onBuyNow();
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primaryLight,
+                  foregroundColor: Colors.white,
+                  elevation: 4,
+                  shadowColor: AppTheme.primaryLight.withValues(alpha: 0.4),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                 ),
-                label: Text(
-                  'Make an Offer',
-                  style: AppTheme.lightTheme.textTheme.titleMedium?.copyWith(
-                    color: AppTheme.lightTheme.colorScheme.secondary,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                style: TextButton.styleFrom(
-                  padding: EdgeInsets.symmetric(vertical: 2.h),
-                  backgroundColor: AppTheme.lightTheme.colorScheme.secondary
-                      .withValues(alpha: 0.1),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    side: BorderSide(
-                      color: AppTheme.lightTheme.colorScheme.secondary
-                          .withValues(alpha: 0.3),
-                    ),
+                child: Text(
+                  'Buy Now',
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.5,
                   ),
                 ),
               ),
@@ -127,107 +118,6 @@ class ActionButtonsWidget extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-
-  Future<void> _callSeller(BuildContext context) async {
-    final phoneNumber = seller["phoneNumber"] as String;
-    final Uri phoneUri = Uri(scheme: 'tel', path: phoneNumber);
-
-    try {
-      if (await canLaunchUrl(phoneUri)) {
-        await launchUrl(phoneUri);
-      } else {
-        _showCallDialog(context, phoneNumber);
-      }
-    } catch (e) {
-      _showCallDialog(context, phoneNumber);
-    }
-  }
-
-  void _showCallDialog(BuildContext context, String phoneNumber) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text(
-            'Call Seller',
-            style: AppTheme.lightTheme.textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Would you like to call the seller?',
-                style: AppTheme.lightTheme.textTheme.bodyMedium,
-              ),
-              SizedBox(height: 2.h),
-              Container(
-                padding: EdgeInsets.all(3.w),
-                decoration: BoxDecoration(
-                  color: AppTheme.lightTheme.colorScheme.surface
-                      .withValues(alpha: 0.5),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: AppTheme.lightTheme.colorScheme.outline
-                        .withValues(alpha: 0.3),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    CustomIconWidget(
-                      iconName: 'phone',
-                      color: AppTheme.lightTheme.colorScheme.primary,
-                      size: 5.w,
-                    ),
-                    SizedBox(width: 3.w),
-                    Text(
-                      phoneNumber,
-                      style:
-                          AppTheme.lightTheme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text(
-                'Cancel',
-                style: AppTheme.lightTheme.textTheme.titleMedium?.copyWith(
-                  color: AppTheme.lightTheme.colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                // Copy to clipboard as fallback
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Phone number copied to clipboard'),
-                    backgroundColor: AppTheme.lightTheme.colorScheme.primary,
-                  ),
-                );
-              },
-              child: Text(
-                'Call Now',
-                style: AppTheme.lightTheme.textTheme.titleMedium?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ],
-        );
-      },
     );
   }
 }

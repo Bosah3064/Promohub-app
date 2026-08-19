@@ -13,7 +13,7 @@ dependencies:
   
   # Core UI and responsive design
   sizer: ^2.0.15
-  google_fonts: ^6.3.0
+  google_fonts: ^8.2.1
   flutter_svg: ^2.2.0
   cached_network_image: ^3.4.1
   intl: ^0.20.2
@@ -27,14 +27,18 @@ dependencies:
   # State management and networking
   dio: ^5.9.0
   connectivity_plus: ^6.1.4
-  shared_preferences: ^2.5.3
+  shared_preferences: ^2.5.5
   
   # UI enhancement
   fluttertoast: ^8.2.12
-  fl_chart: ^1.0.0
+  fl_chart: ^1.2.0
   
-  # Supabase integration
-  supabase_flutter: ^2.9.1
+  # Firebase integration
+  firebase_core: ^3.8.1
+  firebase_auth: ^5.5.1
+  cloud_firestore: ^5.6.5
+  firebase_storage: ^12.4.1
+  cloud_functions: ^5.3.4
   
   # Payment processing
   flutter_stripe: ^11.5.0
@@ -43,7 +47,7 @@ dependencies:
   share_plus: ^11.1.0
   url_launcher: 6.3.2
   camera: 0.11.2
-  image_picker: any
+  image_picker: ^1.2.3
   permission_handler: any
   record: ^6.0.0
   universal_html: ^2.2.4
@@ -51,11 +55,24 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.4
 
 flutter:
   uses-material-design: true
   assets:
     - assets/images/
+    - assets/icons/
     - assets/data/countries+states+cities.json
     - assets/data/countryPhoneCodes.json
     - .env
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  web:
+    generate: true
+    image_path: "assets/images/logo.png"
+    background_color: "#FFFFFF"
+    theme_color: "#F84B5A"
+  image_path: "assets/images/logo.png"
+  min_sdk_android: 21

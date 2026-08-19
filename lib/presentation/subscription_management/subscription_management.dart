@@ -3,7 +3,7 @@ import 'package:sizer/sizer.dart';
 
 import '../../core/app_export.dart';
 import '../../services/subscription_service.dart';
-import '../../services/supabase_service.dart';
+import '../../services/firebase_service.dart';
 import './widgets/current_subscription_widget.dart';
 import './widgets/subscription_features_widget.dart';
 import './widgets/subscription_plan_card.dart';
@@ -36,7 +36,7 @@ class _SubscriptionManagementState extends State<SubscriptionManagement> {
       setState(() => _isLoading = true);
 
       // Fix: Use getter instead of method call
-      _currentUserId = SupabaseService().currentUserId;
+      _currentUserId = FirebaseService().currentUserId;
 
       if (_currentUserId == null) {
         setState(() => _isLoading = false);
