@@ -96,6 +96,25 @@ class _SearchAndFiltersScreenState extends State<SearchAndFiltersScreen> {
     });
   }
 
+  void _openBarcodeScanner() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => SizedBox(
+        height: MediaQuery.of(context).size.height * 0.85,
+        child: BarcodeScannerWidget(
+          onBarcodeScanned: (barcode) {
+            Navigator.pop(context);
+            _searchController.text = barcode;
+            _onSearchSubmitted(barcode);
+          },
+          onClose: () => Navigator.pop(context),
+        ),
+      ),
+    );
+  }
+
   void _onSearchSubmitted(String query) {
     if (query.isNotEmpty) {
       if (!_recentSearches.contains(query)) {
@@ -211,13 +230,23 @@ class _SearchAndFiltersScreenState extends State<SearchAndFiltersScreen> {
                           hintText: 'Search products, cars, jobs...',
                           hintStyle: TextStyle(color: mutedTextColor),
                           prefixIcon: Icon(Icons.search, color: primary),
-                          suffixIcon: _searchController.text.isNotEmpty
-                              ? IconButton(
+                          suffixIcon: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (_searchController.text.isNotEmpty)
+                                IconButton(
                                   icon:
                                       Icon(Icons.clear, color: mutedTextColor),
                                   onPressed: _onClearSearch,
-                                )
-                              : null,
+                                ),
+                              IconButton(
+                                icon: Icon(Icons.qr_code_scanner, color: primary),
+                                tooltip: 'Scan Barcode',
+                                onPressed: _openBarcodeScanner,
+                              ),
+                              const SizedBox(width: 4),
+                            ],
+                          ),
                           border: InputBorder.none,
                           contentPadding: EdgeInsets.symmetric(vertical: 18),
                         ),
