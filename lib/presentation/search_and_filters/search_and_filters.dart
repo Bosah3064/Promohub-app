@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 
 import '../../core/app_export.dart';
 import '../../services/marketplace_service.dart';
+import './widgets/barcode_scanner_widget.dart';
 
 class SearchAndFiltersScreen extends StatefulWidget {
   const SearchAndFiltersScreen({super.key});

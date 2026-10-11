@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
-
-import '../../../../core/app_export.dart';
+import '../../../../theme/app_theme.dart';
 
 class ImageGalleryWidget extends StatefulWidget {
   final List<String> images;
   final String heroTag;
+  final String? discount;
+  final bool isOfficialStore;
 
   const ImageGalleryWidget({
     super.key,
     required this.images,
     required this.heroTag,
+    this.discount = '-20%',
+    this.isOfficialStore = true,
   });
 
   @override
@@ -35,169 +38,208 @@ class _ImageGalleryWidgetState extends State<ImageGalleryWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
+    final primary = AppTheme.lightTheme.colorScheme.primary;
+
+    return Container(
+      color: Colors.white,
       width: double.infinity,
-      height: 40.h,
+      height: 42.h,
       child: Stack(
         children: [
+          // Main Image PageView
           Hero(
             tag: widget.heroTag,
             child: PageView.builder(
               controller: _pageController,
               onPageChanged: (index) {
-                setState(() {
-                  _currentIndex = index;
-                });
+                setState(() => _currentIndex = index);
               },
               itemCount: widget.images.length,
               itemBuilder: (context, index) {
                 return GestureDetector(
-                  onDoubleTap: () => _showFullScreenImage(context, index),
-                  child: CustomImageWidget(
-                    imageUrl: widget.images[index],
-                    width: double.infinity,
-                    height: 40.h,
-                    fit: BoxFit.cover,
+                  onTap: () => _showFullScreenImage(context, index),
+                  child: Container(
+                    color: Colors.white,
+                    child: Image.network(
+                      widget.images[index],
+                      width: double.infinity,
+                      height: 42.h,
+                      fit: BoxFit.contain,
+                      errorBuilder: (ctx, err, stack) => Center(
+                        child: Icon(
+                          Icons.image_not_supported_outlined,
+                          size: 64,
+                          color: Colors.grey.shade400,
+                        ),
+                      ),
+                      loadingBuilder: (ctx, child, progress) {
+                        if (progress == null) return child;
+                        return Center(
+                          child: CircularProgressIndicator(
+                            value: progress.expectedTotalBytes != null
+                                ? progress.cumulativeBytesLoaded /
+                                    progress.expectedTotalBytes!
+                                : null,
+                            strokeWidth: 2,
+                            color: primary,
+                          ),
+                        );
+                      },
+                    ),
                   ),
                 );
               },
             ),
           ),
+
+          // Top Badges (Official Store & Discount)
+          Positioned(
+            top: 14,
+            left: 14,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (widget.isOfficialStore)
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 6),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF0F172A),
+                      borderRadius: BorderRadius.circular(6),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.15),
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.verified, color: Color(0xFF38BDF8), size: 13),
+                        SizedBox(width: 4),
+                        Text(
+                          'OFFICIAL STORE',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                if (widget.discount != null)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: primary,
+                      borderRadius: BorderRadius.circular(6),
+                      boxShadow: [
+                        BoxShadow(
+                          color: primary.withValues(alpha: 0.35),
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Text(
+                      widget.discount!,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+
+          // Top Right: Image counter chip
+          Positioned(
+            top: 14,
+            right: 14,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.65),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                '${_currentIndex + 1} / ${widget.images.length}',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ),
+
+          // Bottom Indicator Dots
           if (widget.images.length > 1)
             Positioned(
-              bottom: 16,
+              bottom: 12,
               left: 0,
               right: 0,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: List.generate(
                   widget.images.length,
-                  (index) => Container(
-                    margin: EdgeInsets.symmetric(horizontal: 0.5.w),
-                    width: _currentIndex == index ? 3.w : 2.w,
-                    height: 1.h,
+                  (index) => AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    margin: const EdgeInsets.symmetric(horizontal: 3),
+                    width: _currentIndex == index ? 20 : 6,
+                    height: 6,
                     decoration: BoxDecoration(
                       color: _currentIndex == index
-                          ? AppTheme.lightTheme.colorScheme.primary
-                          : Colors.white.withValues(alpha: 0.6),
-                      borderRadius: BorderRadius.circular(4),
+                          ? primary
+                          : Colors.grey.shade300,
+                      borderRadius: BorderRadius.circular(3),
                     ),
                   ),
                 ),
               ),
             ),
-          Positioned(
-            top: 16,
-            right: 16,
-            child: Container(
-              padding: EdgeInsets.symmetric(horizontal: 3.w, vertical: 1.h),
-              decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.6),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text(
-                '${_currentIndex + 1}/${widget.images.length}',
-                style: AppTheme.lightTheme.textTheme.bodySmall?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-          ),
         ],
       ),
     );
   }
 
   void _showFullScreenImage(BuildContext context, int initialIndex) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => _FullScreenImageViewer(
-          images: widget.images,
-          initialIndex: initialIndex,
-        ),
-      ),
-    );
-  }
-}
-
-class _FullScreenImageViewer extends StatefulWidget {
-  final List<String> images;
-  final int initialIndex;
-
-  const _FullScreenImageViewer({
-    required this.images,
-    required this.initialIndex,
-  });
-
-  @override
-  State<_FullScreenImageViewer> createState() => _FullScreenImageViewerState();
-}
-
-class _FullScreenImageViewerState extends State<_FullScreenImageViewer> {
-  late PageController _pageController;
-  late int _currentIndex;
-
-  @override
-  void initState() {
-    super.initState();
-    _currentIndex = widget.initialIndex;
-    _pageController = PageController(initialPage: widget.initialIndex);
-  }
-
-  @override
-  void dispose() {
-    _pageController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: CustomIconWidget(
-            iconName: 'close',
-            color: Colors.white,
-            size: 24,
-          ),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        title: Text(
-          '${_currentIndex + 1} of ${widget.images.length}',
-          style: AppTheme.lightTheme.textTheme.titleMedium?.copyWith(
-            color: Colors.white,
-          ),
-        ),
-        centerTitle: true,
-      ),
-      body: PageView.builder(
-        controller: _pageController,
-        onPageChanged: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
-        itemCount: widget.images.length,
-        itemBuilder: (context, index) {
-          return InteractiveViewer(
-            panEnabled: true,
-            boundaryMargin: EdgeInsets.all(20),
-            minScale: 0.5,
-            maxScale: 4.0,
-            child: Center(
-              child: CustomImageWidget(
-                imageUrl: widget.images[index],
-                width: double.infinity,
-                height: double.infinity,
-                fit: BoxFit.contain,
+    showDialog(
+      context: context,
+      barrierColor: Colors.black,
+      builder: (ctx) => Dialog.fullscreen(
+        child: Stack(
+          children: [
+            PageView.builder(
+              controller: PageController(initialPage: initialIndex),
+              itemCount: widget.images.length,
+              itemBuilder: (ctx, idx) => InteractiveViewer(
+                minScale: 0.8,
+                maxScale: 3.0,
+                child: Center(
+                  child: Image.network(
+                    widget.images[idx],
+                    fit: BoxFit.contain,
+                  ),
+                ),
               ),
             ),
-          );
-        },
+            Positioned(
+              top: 40,
+              right: 20,
+              child: IconButton(
+                icon: const Icon(Icons.close, color: Colors.white, size: 28),
+                onPressed: () => Navigator.pop(ctx),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

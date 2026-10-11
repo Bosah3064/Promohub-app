@@ -127,11 +127,11 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
 
   void _simulateBarcodeDetection() {
     final mockBarcodes = [
+      '328048000', // Sonar X2 Stainless Steel 2.0L Kettle SKU (Jumia)
       '1234567890123',
       '9876543210987',
       '5555666677778',
       '1111222233334',
-      '9999888877776',
     ];
 
     final randomBarcode =
