@@ -1,35 +1,89 @@
 {
-    "name": "PromoHub - Marketplace & Deals",
-    "short_name": "PromoHub",
-    "start_url": ".",
-    "display": "standalone",
-    "background_color": "#0F172A",
-    "theme_color": "#F84B5A",
-    "description": "PromoHub - AI-powered marketplace for buying, selling, and discovering amazing deals.",
-    "orientation": "portrait-primary",
-    "prefer_related_applications": false,
-    "icons": [
+  "name": "PromoHub - Marketplace & Deals",
+  "short_name": "PromoHub",
+  "id": "/?source=pwa",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": [
+    "window-controls-overlay",
+    "standalone",
+    "minimal-ui"
+  ],
+  "background_color": "#0b0f19",
+  "theme_color": "#F84B5A",
+  "description": "PromoHub - AI-powered marketplace for buying, selling, and discovering amazing deals in Kenya and East Africa.",
+  "orientation": "any",
+  "lang": "en",
+  "dir": "ltr",
+  "categories": [
+    "shopping",
+    "business",
+    "lifestyle"
+  ],
+  "prefer_related_applications": false,
+  "icons": [
+    {
+      "src": "icons/Icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/Icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/Icon-maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icons/Icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Marketplace Home",
+      "short_name": "Deals",
+      "description": "Discover hot deals and trending listings",
+      "url": "./#/marketplace-home",
+      "icons": [
         {
-            "src": "icons/Icon-192.png",
-            "sizes": "192x192",
-            "type": "image/png"
-        },
-        {
-            "src": "icons/Icon-512.png",
-            "sizes": "512x512",
-            "type": "image/png"
-        },
-        {
-            "src": "icons/Icon-maskable-192.png",
-            "sizes": "192x192",
-            "type": "image/png",
-            "purpose": "maskable"
-        },
-        {
-            "src": "icons/Icon-maskable-512.png",
-            "sizes": "512x512",
-            "type": "image/png",
-            "purpose": "maskable"
+          "src": "icons/Icon-192.png",
+          "sizes": "192x192"
         }
-    ]
+      ]
+    },
+    {
+      "name": "Electric Kettle Deal",
+      "short_name": "Kettle",
+      "description": "View Sonar X2 2.0L Kettle Deal",
+      "url": "./#/listing-detail",
+      "icons": [
+        {
+          "src": "icons/Icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Shopping Cart",
+      "short_name": "Cart",
+      "description": "View your shopping cart",
+      "url": "./#/cart",
+      "icons": [
+        {
+          "src": "icons/Icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ]
 }
