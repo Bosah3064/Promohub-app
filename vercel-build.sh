@@ -43,10 +43,12 @@ done
 
 # 2. Check or install Flutter SDK
 echo ">> [2/5] Setting up Flutter SDK..."
+git config --global --add safe.directory "*" 2>/dev/null || true
+
 if command -v flutter &> /dev/null; then
   echo "Flutter is already installed in the system PATH."
 else
-  FLUTTER_VERSION="${FLUTTER_VERSION:-3.22.0}"
+  FLUTTER_VERSION="${FLUTTER_VERSION:-stable}"
   if [ ! -d "flutter" ]; then
     echo "Cloning Flutter SDK (version: $FLUTTER_VERSION)..."
     git clone --depth 1 --branch "$FLUTTER_VERSION" https://github.com/flutter/flutter.git
