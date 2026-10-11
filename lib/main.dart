@@ -10,8 +10,12 @@ import './services/firebase_service.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Load environment variables
-  await dotenv.load(fileName: ".env");
+  // Load environment variables safely
+  try {
+    await dotenv.load(fileName: ".env");
+  } catch (e) {
+    debugPrint('Note: .env file not loaded or not found: $e');
+  }
 
   // Initialize Firebase with better error handling
   try {

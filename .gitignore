@@ -23,3 +23,8 @@ firebase/*adminsdk*.json
 
 # Logs
 *.log
+
+# Vercel & CI
+flutter/
+.vercel/
+

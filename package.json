@@ -1,0 +1,9 @@
+{
+  "name": "promohub",
+  "version": "1.0.0",
+  "private": true,
+  "description": "PromoHub - AI-powered marketplace",
+  "scripts": {
+    "build": "bash vercel-build.sh"
+  }
+}
